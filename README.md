@@ -16,6 +16,15 @@ Also required are of course python and the scapy libraries, and also netaddr for
 
 The tested platform is Kali Linux 1.0.9 running on kernel 3.14.
 
+Options
+=======
+
+<pre>
+	-d		print debug to stdout (--debug)
+	-f		add a mac to favorite list (--fav)
+	-i		select interface (--interface)
+</pre>
+
 Examples
 ========
 <pre>
