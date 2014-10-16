@@ -218,7 +218,7 @@ def sniffpkts(packet):
       
       out = ''
       
-      if(client in conf.fav): out = '*'
+      #if(client in conf.fav): out = '*'
       
       out += ' ' + str(client) + ' (' + str(conf.c[client].vendor[:9]) + ')\t\t' + \
         str(conf.c[client].signal) + '\t' + \
@@ -240,6 +240,7 @@ def main(argv):
   interface = ''
   
   conf.opts.add('probe')
+  conf.opts.add('print')
 
   getopts = 'ci:thpdf'
   getoptslong = ['help', 'print', 'probe', 'interface=', 'debug', 'fav=']
@@ -261,9 +262,6 @@ def main(argv):
       print '\t' + '-d' + '\t\t' + 'print debug to stdout (--debug)'
       sys.exit()
     
-    elif opt in ('-f', '--fav'):
-      conf.fav.add(arg)
-
     elif opt in ('-p', '--print'):
       conf.opts.add('print')
     
