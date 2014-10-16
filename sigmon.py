@@ -1,4 +1,4 @@
-#!/usr/bin/python -u
+.#!/usr/bin/python -u
 
 # probe.py v.09a - cbt 10/01/14
 
@@ -79,7 +79,10 @@ class CONF(object):
   clientcount = 0
   ssidcount = 0
   fav = set()
-
+  sndplayer = '/usr/bin/play'
+  sndplayeropts = '-q'
+  newsound = 'new.wav'
+  interface = ''
 conf = CONF()
 
 # debug?
@@ -173,7 +176,7 @@ def sniffpkts(packet):
       conf.c[p.mac].lastseen = p.lastseen
     except:
       debug('New Client: ' + p.mac)
-      subprocess.Popen(['/usr/bin/play','-q','/root/build/kismet-2013-03-R1b/wav/new.wav'])
+      subprocess.Popen([conf.sndplayer, conf.sndplayeropts, conf.newsound])
     
       conf.clientcount += 1
       
@@ -201,7 +204,7 @@ def sniffpkts(packet):
   # re-add couchdb support later
   if 'print' in conf.opts:
 
-    output = '\n PKTS: ' + str(conf.packets) + ' [ Elapsed: ' + str(int((time.time() - conf.uptime))) + \
+    output = '\n ' + conf.interface + ' PKTS: ' + str(conf.packets) + ' [ Elapsed: ' + str(int((time.time() - conf.uptime))) + \
         ' ][ ' + str(int(time.time())) + ' ][ ' + str(conf.clientcount) + ' Clients ][ ' + str(conf.ssidcount) + ' SSIDs ][ sorting by signal level\n'
     
     header = '\n STATION\t\t\t\tPWR\tFrames\tProbes\n\n'
@@ -216,11 +219,11 @@ def sniffpkts(packet):
           ' [' + str(conf.c[client].probes))
       # output list of clients and ssids
       
-      out = ''
+      out = ' '
       
-      #if(client in conf.fav): out = '*'
+      if(client in conf.fav): out = '*'
       
-      out += ' ' + str(client) + ' (' + str(conf.c[client].vendor[:9]) + ')\t\t' + \
+      out += str(client) + ' (' + str(conf.c[client].vendor[:9]) + ')\t\t' + \
         str(conf.c[client].signal) + '\t' + \
         str(conf.c[client].probes) + '\t' + ','.join(conf.c[client].ssids) + '\n'
       
@@ -237,13 +240,12 @@ def sniffpkts(packet):
 
 def main(argv):
   conf.uptime = time.time()
-  interface = ''
   
   conf.opts.add('probe')
   conf.opts.add('print')
 
-  getopts = 'ci:thpdf'
-  getoptslong = ['help', 'print', 'probe', 'interface=', 'debug', 'fav=']
+  getopts = 'hi:df:'
+  getoptslong = ['help', 'interface=', 'debug', 'fav=']
   
   try:
     opts, args = getopt.getopt(argv, getopts, getoptslong)
@@ -256,35 +258,27 @@ def main(argv):
       print os.path.basename(__file__) + ' [interface]'
       print '\t' + '-h' + '\t\t' + 'show this help'
       print ''
+      print '\t' + '-f' + '\t\t' + 'add a mac to favorite list (--fav)'
       print '\t' + '-i' + '\t\t' + 'select interface (--interface)'
-      print '\t' + '-p' + '\t\t' + 'print to stdout (--print)'
-      print '\t' + '-c' + '\t\t' + 'print json to stdout (--couchdb)'
       print '\t' + '-d' + '\t\t' + 'print debug to stdout (--debug)'
+      print ''
+      print 'version ' + conf.version
       sys.exit()
     
-    elif opt in ('-p', '--print'):
-      conf.opts.add('print')
+    elif opt in ('-f', '--fav'):
+      debug('adding ' + arg + ' to favorites')
+      conf.fav.add(arg)
     
     elif opt in ('-d', '--debug'):
       conf.opts.add('debug')
     
     elif opt in ('-i', '--interface'):
-      interface = arg
-    
-    elif opt in ('-l', '--limit'):
-      conf.opts.add('limit')
-      limit = arg
-    
-    elif opt in ('--probe'):
-      conf.opts.remove('ess')
-    
-    elif opt in ('--ess'):
-      conf.opts.remove('probe')
+      conf.interface = arg
 
-  if interface == '': interface = 'mon0' 
-  print 'Listening for packets from ' + interface
+  if conf.interface == '': conf.interface = 'mon0' 
+  print 'Listening for packets from ' + conf.interface
 
-  sniff(iface=interface, prn=sniffpkts)
+  sniff(iface=conf.interface, prn=sniffpkts)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
