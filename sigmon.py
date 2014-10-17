@@ -1,4 +1,4 @@
-.#!/usr/bin/python -u
+#!/usr/bin/python -u # unbuffered output
 
 # probe.py v.09a - cbt 10/01/14
 
