@@ -1,4 +1,4 @@
-.#!/usr/bin/python -u
+#!/usr/bin/python -u
 
 # probe.py v.09a - cbt 10/01/14
 
@@ -173,7 +173,7 @@ def sniffpkts(packet):
 
     try:
       conf.c[p.mac]
-      conf.c[p.mac].lastseen = p.lastseen
+      conf.c[p.mac].firstseen = p.lastseen
     except:
       debug('New Client: ' + p.mac)
       subprocess.Popen([conf.sndplayer, conf.sndplayeropts, conf.newsound])
@@ -181,7 +181,7 @@ def sniffpkts(packet):
       conf.clientcount += 1
       
       conf.c[p.mac] = Client(p.mac)
-      conf.c[p.mac].firstseen = p.lastseen
+      conf.c[p.mac].lastseen = p.lastseen
       conf.c[p.mac].vendor = p.vendor
     
 
