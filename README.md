@@ -18,7 +18,7 @@ Only tested it on one machine! But it should work on others.
 
 Also required are of course <b>python</b> and the <b>scapy</b> libraries, and also <b>netaddr</b> for mac address lookups.
 
-The testing platform is <b>Kali Linux</b> 1.0.9 running on an i686 kernel version 3.14.
+The testing platform is <b>Kali Linux</b> 1.0.9 running on an i686 kernel version 3.14.<br>
 The tested chipset was a realtek 8187.
 
 Usage
@@ -28,7 +28,7 @@ Running sigmon.py without any arguments will begin listening for probes from the
 airmon-ng must be run prior to create the monitor interface from the wireless interface. Use -i to choose
 another interface; only one is currently supported.
 
-Use the -f flag to favorite all of your own devices, and note them in the display.
+Use the -f flag to favorite all of your own devices, and note them in the display.<br>
 E.g. sigmon.py -f 00:00:00:00:00:00
 
 A tailable version will come soon; this will be vaguely different from a tshark one-liner.
@@ -68,17 +68,17 @@ root#kali pts/0-/root/code/sigmon] ./sigmon --print
 Caveats
 =======
 
-Some wireless cards won't report correct signal levels
-Currently doesn't save any information
-Will fill your screen after 10000 packets or a couple dozen clients
-Can cause your cat to do weird things
+Some wireless cards won't report correct signal levels<br>
+Currently doesn't save any information<br>
+Will fill your screen after 10000 packets or a couple dozen clients<br>
+Can cause your cat to do weird things<br>
 
 TODO
 ====
 
-Add pretty printed numbers
-Add other output options, couchdb, sqlite, sqlachemy
-Add curses display :D
+Add pretty printed numbers<br>
+Add other output options, couchdb, sqlite, sqlachemy<br>
+Add curses display :D<br>
 
 Contact
 =======
@@ -88,16 +88,16 @@ CB Terry - terry.chad@gmail.com / github.com/terbo
 See Also
 ========
 
-Projects with a grander scope:
-
-Snoopy - https://github.com/sensepost/snoopy-ng and https://github.com/sensepost/snoopy
-CreepyDOL - blog.ussjoin.com/2013/08/creepydol.html and https://github.com/ussjoin
+Projects with a grander scope:<br>
+<br>
+Snoopy - https://github.com/sensepost/snoopy-ng and https://github.com/sensepost/snoopy<br>
+CreepyDOL - blog.ussjoin.com/2013/08/creepydol.html and https://github.com/ussjoin<br>
 
 Videos:
 
-https://www.youtube.com/watch?v=GvrB6S_O0BE The Machines That Betrayed Their Masters by Glenn Wilkinson_
-https://www.youtube.com/watch?v=ubjuWqUE9wQ - DEFCON 21 - Stalking a City for Fun and Frivolity
-https://www.youtube.com/watch?v=NjuhdKUH6U4 - DEFCON 20 - Can You Track Me Now? Government And Corporate Surveillance Of Mobile Geo-Location
+https://www.youtube.com/watch?v=GvrB6S_O0BE The Machines That Betrayed Their Masters by Glenn Wilkinson_<br>
+https://www.youtube.com/watch?v=ubjuWqUE9wQ - DEFCON 21 - Stalking a City for Fun and Frivolity<br>
+https://www.youtube.com/watch?v=NjuhdKUH6U4 - DEFCON 20 - Can You Track Me Now? Government And Corporate Surveillance Of Mobile Geo-Location<br>
 
 Future
 ======
