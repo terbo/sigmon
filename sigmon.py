@@ -340,7 +340,6 @@ def main(argv):
       conf.interface = arg
 
   if('debug' not in conf.opts and 'tail' not in conf.opts):
-    print 'adding print option'
     conf.opts.add('print')
   
   print 'Listening for %s probes from %s ' % \
