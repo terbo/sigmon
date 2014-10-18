@@ -1,18 +1,17 @@
 #!/usr/bin/python -u
 
 '''
-probe.py v.09c - cbt 10/01/14
+probe.py v.09d - cbt 10/01/14
 last modified 17 oct 01:48 pst
 
 taken from somewheres else ....
 listen for wireless probe requests
 
 TODO
-Add CouchDB (easy) or sqlalchemy (coding curve)
 
 Work out various displays, 'noisy' clients, common ssids
 
--- add couchdb -> add redisplay/statistics/graphs
+-- add redisplay/statistics/graphs
 -- add threading -> add multiple interfaces -> add ncurses
 
 '''
@@ -43,6 +42,7 @@ class Packet():
   psubtype=0
   packets=0
   size=0
+  location=None
 
 # client observation
 class Client:
@@ -86,6 +86,9 @@ class CONF(object):
   probes = 0
   uptime = 0
   
+  # location for couchdb
+  location = None
+  
   # signal threshold for nearby devices
   signal_max = -60
   
@@ -101,9 +104,10 @@ class CONF(object):
   c = dict() # clients
   opts = set() 
 
-  interrupts = 0
-  interruptsmax = 5
-
+  db = None
+  couch = None
+  couchserver = 'http://localhost:5984'
+  
 conf = CONF()
 
 def sigint(signal, frame):
@@ -147,9 +151,11 @@ def usage():
   print os.path.basename(__file__) + ' [interface]' + '\tlisten for wireless probe requests\n'
   print '\t' + '-h' + '\t\t' + 'show this help'
   print ''
-  print '\t' + '-f' + '\t\t' + 'add a mac to favorite list (--fav)'
-  print '\t' + '-i' + '\t\t' + 'select interface (--interface)'
-  print '\t' + '-l' + '\t\t' + 'stop after x number of packets (--limit)'
+  print '\t' + '-f' + '\t\t' + 'add a mac to favorite list (--fav [mac])'
+  print '\t' + '-i' + '\t\t' + 'select interface (--interface [iface])'
+  print '\t' + '-c' + '\t\t' + 'use couchdb for output (--couchdb [server])'
+  print '\t' + '  ' + '\t\t' + '  use --location [location] when using couchdb'
+  print '\t' + '-l' + '\t\t' + 'stop after x number of packets (--limit [packets])'
   print '\t' + '-d' + '\t\t' + 'print debug to stdout (--debug)'
   print '\t' + '-t' + '\t\t' + 'tailable (CSV) output (--tail)'
   print ''
@@ -260,7 +266,6 @@ def sniffpkts(packet):
   # increment (relevant) packet count
   conf.probes += 1
 
-  # re-add couchdb support later
   if 'print' in conf.opts:
     output = '\n IF: %s %s probes [ Started: %s ][ %s ][ %s Clients ][ %s SSIDs ][ sorting by %s' % \
       ( conf.interface , pp.intcomma(conf.probes), \
@@ -306,12 +311,21 @@ def sniffpkts(packet):
     show("'%s','%s','%s','%s','%s','%s','%s'" % \
         (p.mac, p.bssid, p.ssid, p.signal, \
          p.firstseen, p.lastseen, p.vendor))
+  
+  elif 'couchdb' in conf.opts:
+    output = { 'mac': p.mac, 'bssid': p.bssid, 'ssid': p.ssid, 'signal': p.signal, \
+                'firstseen': p.firstseen, 'lastseen': p.lastseen, 'vendor': p.vendor, \
+                'location': conf.location, 'interface': conf.interface}
+    doc = conf.db.save(output)
+    debug('Created document %s' % doc)
+    
+    sys.stdout.write('%d\r' % conf.probes)
 
 def main(argv):
   conf.uptime = time.time()
   
-  getopts = 'hi:df:l:t'
-  getoptslong = ['help', 'interface=', 'debug', 'fav=', 'count=','tail']
+  getopts = 'hi:df:l:tc'
+  getoptslong = ['help', 'interface=', 'debug', 'couchdb=','fav=', 'limit=','tail', 'location=']
   
   try:
     opts, args = getopt.getopt(argv, getopts, getoptslong)
@@ -329,6 +343,41 @@ def main(argv):
     elif opt in ('-l', '--limit'):
       conf.limit = int(arg)
     
+    elif opt == '--location':
+      conf.location = arg
+    
+    elif opt in ('-c', '--couchdb'):
+      try:
+        conf.couchdbserver = arg
+      except: 
+        pass
+
+      if conf.location == None:
+        print 'Please provide a physical location name for couchdb.'
+        sys.exit(2)
+
+      try:
+        import pycouchdb as couchdb
+      except:
+        print 'Please install pycouchdb (easy_install pycouchdb) before using CouchDB.'
+        sys.exit(1)
+      
+      conf.opts.add('couchdb')
+      
+      debug('Connecting to couchdb server %s' % conf.couchserver)
+      
+      try:
+        conf.couch = couchdb.Server(conf.couchserver)
+      except:
+        debug('Error initializing couchdb.' + conf.couch)
+        sys.exit(2)
+
+      try:
+        conf.db = conf.couch.database('sigmon')
+      except:
+        conf.couch.create('sigmon')
+        debug('Creating database `sigmon`')
+  
     elif opt in ('-f', '--fav'):
       conf.fav.add(arg)
       debug('added ' + arg + ' to favorites')
@@ -339,7 +388,7 @@ def main(argv):
     elif opt in ('-i', '--interface'):
       conf.interface = arg
 
-  if('debug' not in conf.opts and 'tail' not in conf.opts):
+  if('debug' not in conf.opts and 'tail' not in conf.opts and 'couchdb' not in conf.opts):
     conf.opts.add('print')
   
   print 'Listening for %s probes from %s ' % \

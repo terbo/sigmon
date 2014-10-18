@@ -45,7 +45,8 @@ You will need a wireless card that is capable of going into <a href=http://en.wi
 Only tested it on one machine, but it should work on others.<br>
 
 Also required are of course <b>python</b> and the <b>scapy</b> libraries.<br>
-Also, <b>netaddr</b> for mac address lookups, and <b>humanize</b> for pretty numbers.<br>
+<b>netaddr</b> for mac address lookups, and <b>humanize</b> for pretty numbers.<br>
+Additionally, <b>pycouchdb</b> is necessary if you wish to use couchdb.
 
 The testing platform is <b>Kali Linux</b> 1.0.9 running on an i686 kernel version 3.14.<br>
 The tested chipsets were a realtek 8187 and an atheros ar9271.<br>
@@ -65,15 +66,21 @@ Use sigmon.py -t to output a tailable csv version (all information on one line)
 Use sigmon.py -l [number] to listen for a limited number of packets, then exit.
 This is not the same as the number of well-formed wireless packets it will display.
 
+To save the information to couchdb, specify the -c and --location options.
+The default server is on the default port on localhost, use --couchdb [server] to change.
+
 <pre>
 sigmon [interface] 
 	-h		show this help 
 
 	-f		add a mac to favorite list (--fav) 
 	-i		select interface (--interface) 
+	-c		use couchdb. specify --location [location] first
 	-l		stop after x number of packets (--limit) 
 	-t		tailable output (--tail) 
 	-d		print debug to stdout (--debug) 
+
+	--location	specify location for couchdb
 
 version 0.9c 
 </pre>
@@ -100,14 +107,14 @@ Caveats
 =======
 
 Some wireless cards won't report correct signal levels (some onboard laptop cards)<br>
-Currently doesn't save any information (looking into couchdb)<br>
+No functions to view the saved data (yet)
 Will fill your screen after 10000 packets or a couple dozen clients<br>
 Can cause your cat to do weird things<br> 
 
 TODO
 ====
 
-Add other output options, couchdb, sqlite, sqlachemy<br>
+Add other output options, sqlite, sqlachemy<br>
 Add curses display :D<br>
 
 Contact
