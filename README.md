@@ -6,8 +6,8 @@ Display wireless probe requests like airodump-ng in python and scapy<br>
 This program displays probe requests from wireless clients in range.<br>
 The output is similar to that of airodump-ng from the aircrack-ng suit.<br>
 
-It can also play a sound when a new client is detected (the kismet sound, @ http://goo.gl/oDi5sR) and can<br>
-be instructed to note familiar devices (favorites) such as machines you own.<br>
+It can also play a sound when a new client is detected (the kismet sound, @ http://goo.gl/oDi5sR)
+and can be instructed to note familiar devices (favorites) such as machines you own.<br>
 
 The code is released under the GPL2 license.
 
