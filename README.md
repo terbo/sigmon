@@ -3,10 +3,10 @@ sigmon 0.9c
 
 Display wireless probe requests like airodump-ng in python and scapy<br>
 
-This program displays wireless probe requests from associated and unassociated wireless clients in range.<br>
+This program displays probe requests from wireless clients in range.<br>
 The output is similar to that of airodump-ng from the aircrack-ng suit.<br>
 
-It will also play a sound when a new client is detected (the kismet sound, available @ http://goo.gl/oDi5sR) and can<br>
+It can also play a sound when a new client is detected (the kismet sound, @ http://goo.gl/oDi5sR) and can<br>
 be instructed to note familiar devices (favorites) such as machines you own.<br>
 
 The code is released under the GPL2 license.
@@ -82,6 +82,19 @@ Examples
 ========
 <pre>
 root#kali pts/0-/root/code/sigmon] ./sigmon
+ IF: mon0 18 probes [ Started: 10 seconds ago ][ 2014-10-17 23:28:48.117824 ][ 3 Clients ][ 1 SSIDs ][ sorting by last seen
+
+				Close Clients:
+ STATION					PWR	Probes
+
+  50:cc:f8:6f:xx:xx  (Samsung Electro Me)	-34      5        [ANY]
+
+				Farther clients:
+ STATION					PWR	Probes
+
+  7c:61:93:ad:xx:xx  (HTC Corporation   )	-74      9        NETGEAR01,[ANY]
+  c4:43:8f:66:xx:xx  (LG Electronics    )	-73      4        [ANY]
+</pre>
 
 Caveats
 =======
