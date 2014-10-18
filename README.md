@@ -113,21 +113,21 @@ Add curses display :D<br>
 Contact
 =======
 
-CB Terry - terry.chad@gmail.com / github.com/terbo
+CB Terry - terry.chad@gmail.com / http://github.com/terbo
 
 See Also
 ========
 
 Projects with a grander scope:<br>
 <br>
-Snoopy - https://github.com/sensepost/snoopy-ng and https://github.com/sensepost/snoopy<br>
-CreepyDOL - blog.ussjoin.com/2013/08/creepydol.html and https://github.com/ussjoin<br>
+Snoopy - http://github.com/sensepost/snoopy-ng and https://github.com/sensepost/snoopy<br>
+CreepyDOL - http://blog.ussjoin.com/2013/08/creepydol.html and https://github.com/ussjoin<br>
 
 Videos:
 
-https://www.youtube.com/watch?v=GvrB6S_O0BE - The Machines That Betrayed Their Masters by Glenn Wilkinson_<br>
-https://www.youtube.com/watch?v=ubjuWqUE9wQ - DEFCON 21 - Stalking a City for Fun and Frivolity<br>
-https://www.youtube.com/watch?v=NjuhdKUH6U4 - DEFCON 20 - Can You Track Me Now? Government And Corporate Surveillance Of Mobile Geo-Location<br>
+http://www.youtube.com/watch?v=GvrB6S_O0BE - The Machines That Betrayed Their Masters by Glenn Wilkinson_<br>
+http://www.youtube.com/watch?v=ubjuWqUE9wQ - DEFCON 21 - Stalking a City for Fun and Frivolity<br>
+http://www.youtube.com/watch?v=NjuhdKUH6U4 - DEFCON 20 - Can You Track Me Now? Government And Corporate Surveillance Of Mobile Geo-Location<br>
 
 Future
 ======
