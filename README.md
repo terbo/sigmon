@@ -69,6 +69,22 @@ This is not the same as the number of well-formed wireless packets it will displ
 To save the information to couchdb, specify the -c and --location options.
 The default server is on the default port on localhost, use --couchdb [server] to change.
 
+Several scripts have been added to queries/. They perform rudimentary queries
+on the data saved, such as presenting an ascii graph of probes, searching for
+specific ssids, and showing unique clients, ssids, and vendors. In-progress.
+
+Currently recommendaged usage:
+
+<code>
+sigmon --location here -c &
+
+queries/graph.py
+
+</code>
+
+This will listen for probes in the background and insert them into a couchdb.
+The second command will show a graph of the collected probes for the current date.
+
 <pre>
 sigmon [interface] 
 	-h		show this help 
