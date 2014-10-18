@@ -107,7 +107,7 @@ Caveats
 =======
 
 Some wireless cards won't report correct signal levels (some onboard laptop cards)<br>
-No functions to view the saved data (yet)
+No functions to view the saved data (yet)<br>
 Will fill your screen after 10000 packets or a couple dozen clients<br>
 Can cause your cat to do weird things<br> 
 
