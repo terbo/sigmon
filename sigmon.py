@@ -1,5 +1,4 @@
 #!/usr/bin/python -u
-
 '''
 probe.py v.09d - cbt 10/01/14
 last modified 17 oct 01:48 pst
@@ -14,10 +13,18 @@ Work out various displays, 'noisy' clients, common ssids
 -- add redisplay/statistics/graphs
 -- add threading -> add multiple interfaces -> add ncurses
 
+-- consolidate query scripts
+-- add threading!
+
+BUGS
+
+Malformed packets squeak through, and cause havok with string formatting
+
 '''
 
-import os, sys, signal, string, datetime as dt, time # sched, json
+import os, sys, signal, string, threading, datetime as dt, time # sched, json
 import logging, getopt, humanize as pp
+import npyscreen          # oooh preety
 
 logging.getLogger('scapy.runtime').setLevel(logging.ERROR) # quiet scapy ipv6 error
 
@@ -79,8 +86,8 @@ class Fav:
 # the configuration object, with everything in it (including globals and defaults options)
 class CONF(object):
   version = '0.9c'
-  interface = 'mon0'
-  
+  interfaces = set()
+
   limit = 0
   packets = 0
   probes = 0
@@ -110,26 +117,11 @@ class CONF(object):
   
 conf = CONF()
 
-def sigint(signal, frame):
-  debug('conf.opts: ' + str(list(conf.opts)))
-  debug('Probes: ' + pp.intcomma(conf.probes))
-  debug('Packets: ' + pp.intcomma(conf.packets))
-  debug('Signal Maximum: ' + str(conf.signal_max))
-  debug('Clients seen: ' + pp.intcomma(conf.clientcount))
-  debug('SSIDs seen: ' + pp.intcomma(conf.ssidcount))
-  debug('Favorites list: ' + str(list(conf.fav)))
-  debug('Interface: ' + conf.interface)
-  debug('Start time: ' + str(conf.uptime))
-
-  print('\nInterrupt received -- exiting.')
-  sys.exit(0)
-
-signal.signal(signal.SIGINT, sigint)
-
 # what bugs?
 def debug(log):
   if 'debug' not in conf.opts: return
-  print "%s  %s" % (dt.datetime.now(), log)
+  sys.stderr.write('%s  %s\n' % (dt.datetime.now(), log))
+  sys.stderr.flush()
   
 # TODO: remove all symbols, spaces, lowercase
 def macreg(mac):
@@ -148,7 +140,8 @@ def show(out):
   sys.stdout.flush()
 
 def usage():
-  print os.path.basename(__file__) + ' [interface]' + '\tlisten for wireless probe requests\n'
+  print os.path.basename(__file__) + ' [interface] -i [interface...]' + \
+    '\tlisten for wireless probe requests\n'
   print '\t' + '-h' + '\t\t' + 'show this help'
   print ''
   print '\t' + '-f' + '\t\t' + 'add a mac to favorite list (--fav [mac])'
@@ -168,7 +161,8 @@ def usage():
 # which presents its own problem - need to figure out what to do,
 # or read from a db in a seperate program
 
-def sniffpkts(packet):
+def sniffprobes(packet):
+  
   p = Packet()
   
   conf.packets += 1
@@ -267,8 +261,8 @@ def sniffpkts(packet):
   conf.probes += 1
 
   if 'print' in conf.opts:
-    output = '\n IF: %s %s probes [ Started: %s ][ %s ][ %s Clients ][ %s SSIDs ][ sorting by %s' % \
-      ( conf.interface , pp.intcomma(conf.probes), \
+    output = '\n %s probes [ Started: %s ][ %s ][ %s Clients ][ %s SSIDs ][ sorting by %s' % \
+      ( pp.intcomma(conf.probes), \
         pp.naturaltime( time.time() - conf.uptime ), dt.datetime.today(), \
         pp.intcomma( conf.clientcount ), pp.intcomma( conf.ssidcount ), 'last seen')
     
@@ -315,7 +309,7 @@ def sniffpkts(packet):
   elif 'couchdb' in conf.opts:
     output = { 'mac': p.mac, 'bssid': p.bssid, 'ssid': p.ssid, 'signal': p.signal, \
                 'firstseen': p.firstseen, 'lastseen': p.lastseen, 'vendor': p.vendor, \
-                'location': conf.location, 'interface': conf.interface}
+                'location': conf.location}
     doc = conf.db.save(output)
     debug('Created document %s' % doc)
     
@@ -386,19 +380,62 @@ def main(argv):
       conf.opts.add('tail')
     
     elif opt in ('-i', '--interface'):
-      conf.interface = arg
+      if arg not in conf.interfaces:
+        conf.interfaces.add(arg)
 
   if('debug' not in conf.opts and 'tail' not in conf.opts and 'couchdb' not in conf.opts):
     conf.opts.add('print')
   
+  if(len(conf.interfaces) < 1):
+    conf.interfaces.add('mon0')
+  
   print 'Listening for %s probes from %s ' % \
-    ( 'unlimited' if conf.limit == 0 else conf.limit, conf.interface )
+    ( 'unlimited' if conf.limit == 0 else conf.limit, list(conf.interfaces) )
 
   if('tail' in conf.opts):
     print 'mac,bssid,ssid,signal,firstseen,lastseen,vendor'
   
+  threads=[]
+
+  for interface in conf.interfaces:
+    debug('Sniffer sigmon-sniffer-'+interface+' starting..')
+    t = threading.Thread(target=sniff,kwargs={'prn':sniffprobes,'iface':interface,'store':0},
+      name='sigmon-sniffer-' + interface)
+    threads.append(t)
+  
+  signal.siginterrupt(3,True)
+  
+  for worker in threads:
+    worker.daemon=True
+    debug('%s worker starting' % (worker.name))
+    try:
+      worker.start()
+    except:
+      debug('FATAL %s worker error' % (worker.name))
+
+  try:
+    while(7):
+      time.sleep(1)
+      signal.pause()
+  except KeyboardInterrupt:
+    print('conf.opts: ' + str(list(conf.opts)))
+    print('Probes: ' + pp.intcomma(conf.probes))
+    print('Packets: ' + pp.intcomma(conf.packets))
+    print('Signal Maximum: ' + str(conf.signal_max))
+    print('Clients seen: ' + pp.intcomma(conf.clientcount))
+    print('SSIDs seen: ' + pp.intcomma(conf.ssidcount))
+    print('Favorites list: ' + str(list(conf.fav)))
+    print('Interface list: ' + list(conf.interfaces))
+    print('Start time: ' + str(conf.uptime))
+
+    print('\n\nPress Ctrl-C again to exit, or choose an option:\n')
+    print('[ g ]  [ s ]  [ h ]  [ c ]  [ a ]  [ v ]  [ D ]  [ d ]  [ q ]')
+    print('                    Clients  APs  Vendors               quit')
+    print('Graphs Statistics Help                    Debug  daemonize')
+    print('\nsigmon %s' % conf.version)
+
   # sniff count packets, and do not store them in memory
-  sniff(iface=conf.interface, prn=sniffpkts, store=0)
+  #sniff(iface=conf.interface, prn=sniffpkts, store=0)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
