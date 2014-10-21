@@ -1,6 +1,6 @@
 #!/usr/bin/python -u
 '''
-probe.py v.09d - cbt 10/01/14
+probe.py v.09e - cbt 10/01/14
 last modified 17 oct 01:48 pst
 
 taken from somewheres else ....
@@ -22,9 +22,9 @@ Malformed packets squeak through, and cause havok with string formatting
 
 '''
 
-import os, sys, signal, string, threading, datetime as dt, time # sched, json
+import os, sys, signal, string, re, threading, datetime as dt, time
 import logging, getopt, humanize as pp
-import npyscreen          # oooh preety
+from threading import current_thread
 
 logging.getLogger('scapy.runtime').setLevel(logging.ERROR) # quiet scapy ipv6 error
 
@@ -86,7 +86,7 @@ class Fav:
 # the configuration object, with everything in it (including globals and defaults options)
 class CONF(object):
   version = '0.9c'
-  interfaces = set()
+  interfaces = list()
 
   limit = 0
   packets = 0
@@ -118,10 +118,14 @@ class CONF(object):
 conf = CONF()
 
 # what bugs?
-def debug(log):
+# log levels: [0] debug [1] verbose [2] everything
+
+def debug(level, log):
   if 'debug' not in conf.opts: return
-  sys.stderr.write('%s  %s\n' % (dt.datetime.now(), log))
-  sys.stderr.flush()
+  
+  if level == 0 or (level == 1 and 'verbose' in conf.opts) or (level == 2 and 'trace' in conf.opts):
+    sys.stderr.write('%s  %s\n' % (dt.datetime.now(), log))
+    sys.stderr.flush()
   
 # TODO: remove all symbols, spaces, lowercase
 def macreg(mac):
@@ -149,7 +153,7 @@ def usage():
   print '\t' + '-c' + '\t\t' + 'use couchdb for output (--couchdb [server])'
   print '\t' + '  ' + '\t\t' + '  use --location [location] when using couchdb'
   print '\t' + '-l' + '\t\t' + 'stop after x number of packets (--limit [packets])'
-  print '\t' + '-d' + '\t\t' + 'print debug to stdout (--debug)'
+  print '\t' + '-d' + '\t\t' + 'print debug to stdout, more for more info (--debug)'
   print '\t' + '-t' + '\t\t' + 'tailable (CSV) output (--tail)'
   print ''
   print 'version ' + conf.version
@@ -162,13 +166,16 @@ def usage():
 # or read from a db in a seperate program
 
 def sniffprobes(packet):
-  
   p = Packet()
+  thread = current_thread()
+  
+  match = re.search('mon(\d+$)', thread.name)
+  curr_ifname = match.group(0)
   
   conf.packets += 1
   
   if conf.limit != 0 and conf.probes >= conf.limit:
-    debug('Saw %s probes, exiting.' % (conf.limit))
+    debug(0,'Saw %s probes, exiting.' % (conf.limit))
     sys.exit(0)
   
   #debug('Got ' + str(len(str(packet.payload))))
@@ -177,22 +184,22 @@ def sniffprobes(packet):
   # eliminate malformed/bad packets
   
   try: packet
-  except:return #debug('No Packet')
+  except:return #debug(2,'No Packet')
   
   try: packet.info
-  except: return #debug('No Packet')
+  except: return #debug(2,'No Packet')
   
   try: packet.addr2
-  except: return #debug('No MAC Address')
+  except: return #debug(2,'No MAC Address')
   
   try: p.mac = packet.addr2 # check the mac later, maybe a mac class that returns xyz error
-  except: return #debug('No MAC Address')
+  except: return #debug(2,'No MAC Address')
   
   try: packet[Dot11].addr3
-  except: return #debug('No BSSID Address')
+  except: return #debug(2,'No BSSID Address')
   
   try: p.bssid = packet[Dot11].addr3
-  except: return #debug('No BSSID Address')
+  except: return #debug(2,'No BSSID Address')
 
   p.lastseen = str(packet.time)
   p.size = packet.sprintf('%IP.len%')
@@ -211,7 +218,7 @@ def sniffprobes(packet):
     oui = mac.oui
     p.vendor = oui.registration().org
   except TypeError:
-    debug('ERROR Resolving MAC: %s ' % (p.mac))
+    debug(0,'ERROR Resolving MAC: %s ' % (p.mac))
     next
   except NotRegisteredError:
     p.vendor = 'UNREGISTERED'       # hackers change their macs ...
@@ -225,13 +232,12 @@ def sniffprobes(packet):
     p.packetype = 'probe'
   
     # last filter for bad packets
-    if(p.ssid == None and p.bssid == None and p.mac == None): return
+    if p.ssid == None and p.bssid == None and p.mac == None: return
 
     try:
       conf.c[p.mac]
     except:
-      debug('New Client: ' + p.mac)
-      #subprocess.Popen([conf.sndplayer, conf.sndplayeropts, conf.newsound])
+      debug(0,'New Client: ' + p.mac)
     
       conf.clientcount += 1
       
@@ -247,8 +253,8 @@ def sniffprobes(packet):
     # increment probe count
     conf.c[p.mac].probes += 1
     
-    if(p.ssid not in conf.c[p.mac].ssids):
-      debug('New SSID for Client %s (%s): %s' % (p.mac, p.vendor, p.ssid))
+    if p.ssid not in conf.c[p.mac].ssids:
+      debug(0,'New SSID for Client %s (%s): %s' % (p.mac, p.vendor, p.ssid))
       # increment SSID count
       if p.ssid != '<ANY>': conf.ssidcount += 1
       conf.c[p.mac].ssids.add(p.ssid)
@@ -275,13 +281,13 @@ def sniffprobes(packet):
     for client in sorted(conf.c, cmp=lambda a,b : cmp(conf.c[b].lastseen, conf.c[a].lastseen)):
       
       if 'tail' not in conf.opts:
-        debug('Outputting data for %s (%s) %sdBm [%s]' \
+        debug(0,'Outputting data for %s (%s) %sdBm [%s]' \
         % (client, conf.c[client].vendor, \
           conf.c[client].signal[-1], conf.c[client].probes))
       
       # output list of clients and ssids
       
-      if(client in conf.fav): out = ' *'
+      if client in conf.fav: out = ' *'
       else: out = '  '
 
       # easy way of only printing 'valid' ssids from the set
@@ -293,7 +299,7 @@ def sniffprobes(packet):
           conf.c[client].probes, ssids)
      
       # nearby signal
-      if(int(conf.c[client].signal[-1]) > conf.signal_max) :
+      if int(conf.c[client].signal[-1]) > conf.signal_max :
         outputnear += out
       else:
       # far away signal
@@ -307,11 +313,24 @@ def sniffprobes(packet):
          p.firstseen, p.lastseen, p.vendor))
   
   elif 'couchdb' in conf.opts:
-    output = { 'mac': p.mac, 'bssid': p.bssid, 'ssid': p.ssid, 'signal': p.signal, \
-                'firstseen': p.firstseen, 'lastseen': p.lastseen, 'vendor': p.vendor, \
-                'location': conf.location}
-    doc = conf.db.save(output)
-    debug('Created document %s' % doc)
+    output = { 'mac': p.mac, 'bssid': p.bssid, 'ssid': str(p.ssid), 'signal': p.signal, \
+                'firstseen': p.firstseen, 'lastseen': p.lastseen, 'vendor': str(p.vendor), \
+                'location': conf.location, 'iface': curr_ifname }
+
+    doc = ''
+    
+    try:
+      doc = conf.db.save(output)
+    except UnicodeDecodeError:
+      debug(2,'Got some weird ssid - ' + p.ssid)
+      
+      #output['ssid'] = '' + p.ssid
+      # still crashes on unicode / attack ssids ...
+      #doc = conf.db.save(output)
+    
+    if doc != '':
+      debug(1,'Created document %s' % doc['_id'])
+      debug(2,'%s' % doc)
     
     sys.stdout.write('%d\r' % conf.probes)
 
@@ -332,6 +351,11 @@ def main(argv):
       usage()
     
     elif opt in ('-d', '--debug'):
+      if 'verbose' in conf.opts:
+        conf.opts.add('trace')
+      elif 'debug' in conf.opts:
+        conf.opts.add('verbose')
+       
       conf.opts.add('debug')
     
     elif opt in ('-l', '--limit'):
@@ -346,10 +370,6 @@ def main(argv):
       except: 
         pass
 
-      if conf.location == None:
-        print 'Please provide a physical location name for couchdb.'
-        sys.exit(2)
-
       try:
         import pycouchdb as couchdb
       except:
@@ -358,47 +378,57 @@ def main(argv):
       
       conf.opts.add('couchdb')
       
-      debug('Connecting to couchdb server %s' % conf.couchserver)
+      debug(0,'Connecting to couchdb server %s' % conf.couchserver)
       
       try:
         conf.couch = couchdb.Server(conf.couchserver)
       except:
-        debug('Error initializing couchdb.' + conf.couch)
+        debug(0,'Error initializing couchdb.' + conf.couch)
         sys.exit(2)
 
       try:
         conf.db = conf.couch.database('sigmon')
       except:
         conf.couch.create('sigmon')
-        debug('Creating database `sigmon`')
+        debug(0,'Creating database `sigmon`')
   
     elif opt in ('-f', '--fav'):
       conf.fav.add(arg)
-      debug('added ' + arg + ' to favorites')
+      debug(0,'added ' + arg + ' to favorites')
     
     elif opt in ('-t', '--tail'):
       conf.opts.add('tail')
     
     elif opt in ('-i', '--interface'):
       if arg not in conf.interfaces:
-        conf.interfaces.add(arg)
+        conf.interfaces.append(arg)
 
-  if('debug' not in conf.opts and 'tail' not in conf.opts and 'couchdb' not in conf.opts):
+  if 'debug' not in conf.opts and 'tail' not in conf.opts and 'couchdb' not in conf.opts:
     conf.opts.add('print')
   
-  if(len(conf.interfaces) < 1):
-    conf.interfaces.add('mon0')
+  if len(conf.interfaces) < 1:
+    conf.interfaces.append('mon0')
+      
+  if 'couchdb' in conf.opts and conf.location == None:
+    print 'Please provide a physical location name for couchdb.'
+    sys.exit(2)
+
+  conf.interfaces = sorted(conf.interfaces)
+  
+  #if len(conf.interfaces) > 1:
+  #  conf.interfaces[-1] = 'and ' + conf.interfaces[-1]
   
   print 'Listening for %s probes from %s ' % \
-    ( 'unlimited' if conf.limit == 0 else conf.limit, list(conf.interfaces) )
+    ( 'unlimited' if conf.limit == 0 else conf.limit, ', '.join(list(conf.interfaces)) )
 
-  if('tail' in conf.opts):
-    print 'mac,bssid,ssid,signal,firstseen,lastseen,vendor'
+  if 'tail' in conf.opts:
+    print 'mac,bssid,ssid,signal,firstseen,lastseen,interface,vendor'
   
   threads=[]
 
   for interface in conf.interfaces:
-    debug('Sniffer sigmon-sniffer-'+interface+' starting..')
+    debug(1,'Creating thread sigmon-sniffer-'+interface)
+    # sniff count packets, and do not store them in memory
     t = threading.Thread(target=sniff,kwargs={'prn':sniffprobes,'iface':interface,'store':0},
       name='sigmon-sniffer-' + interface)
     threads.append(t)
@@ -407,16 +437,17 @@ def main(argv):
   
   for worker in threads:
     worker.daemon=True
-    debug('%s worker starting' % (worker.name))
+    debug(0,'%s worker starting' % (worker.name))
     try:
       worker.start()
     except:
-      debug('FATAL %s worker error' % (worker.name))
+      debug(0,'FATAL %s worker error' % (worker.name))
 
   try:
     while(7):
       time.sleep(1)
       signal.pause()
+  
   except KeyboardInterrupt:
     print('conf.opts: ' + str(list(conf.opts)))
     print('Probes: ' + pp.intcomma(conf.probes))
@@ -433,9 +464,6 @@ def main(argv):
     print('                    Clients  APs  Vendors               quit')
     print('Graphs Statistics Help                    Debug  daemonize')
     print('\nsigmon %s' % conf.version)
-
-  # sniff count packets, and do not store them in memory
-  #sniff(iface=conf.interface, prn=sniffpkts, store=0)
 
 if __name__ == '__main__':
     main(sys.argv[1:])
