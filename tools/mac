@@ -1,0 +1,11 @@
+#!/usr/bin/python
+
+import sys
+from netaddr import *
+
+inp = sys.argv[1]
+mac = EUI(inp)
+oui = mac.oui
+vendor = oui.registration().org
+
+print str(mac) + ' ' + vendor
