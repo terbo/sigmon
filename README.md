@@ -1,9 +1,9 @@
-sigmon 0.9c
+sigmon 0.9h
 ======
 
 Display wireless probe requests like airodump-ng in python and scapy<br>
 
-This program displays probe requests from wireless clients in range.<br>
+sigmon, or Signal Monitor, displays probe requests from wireless clients in range.<br>
 The output is similar to that of airodump-ng from the aircrack-ng suit.<br>
 
 It can also play a sound when a new client is detected (the kismet sound, @ http://goo.gl/oDi5sR)
@@ -42,11 +42,14 @@ The Requirements
 
 You will need a wireless card that is capable of going into <a href=http://en.wikipedia.org/wiki/Monitor_mode>monitor mode</a>, and is compatible with <a href=http://www.aircrack-ng.org/>aircrack</a>.<br>
 
-Only tested it on one machine, but it should work on others.<br>
+Required python libraries:
 
-Also required are of course <b>python</b> and the <b>scapy</b> libraries.<br>
-<b>netaddr</b> for mac address lookups, and <b>humanize</b> for pretty numbers.<br>
-Additionally, <b>pycouchdb</b> is necessary if you wish to use couchdb.
+* scapy
+* netaddr
+* humanize
+* textwrap
+* ansi
+* ansicolors
 
 The testing platform is <b>Kali Linux</b> 1.0.9 running on an i686 kernel version 3.14.<br>
 The tested chipsets were a realtek 8187 and an atheros ar9271.<br>
@@ -54,84 +57,91 @@ The tested chipsets were a realtek 8187 and an atheros ar9271.<br>
 Usage
 =====
 
-Running sigmon.py without any arguments will begin listening for probes from the default mon0 interface. <br>
-airmon-ng must be run prior to create the monitor interface from the wireless interface. <br>
-Use -i to choose another interface; only one is currently supported. <br>
+sigmon has 3 modes: a full screen mode, which is the default;
+a debug mode, which prints out all info; and a tail mode,
+which will print probes in csv format.
 
-Use the -f flag to favorite all of your own devices, and note them in the display.<br>
-E.g. sigmon.py -f 00:00:00:00:00:00 -f 00:00:00:00:00:01 <br>
+Edit the sigmon.cfg and choose your options. Running sigmon.py will begin
+listening for probes. airmon-ng must be run prior to create the monitor
+interface from the wireless interface. <br>
 
-Use sigmon.py -t to output a tailable csv version (all information on one line)
-
-Use sigmon.py -l [number] to listen for a limited number of packets, then exit.
-This is not the same as the number of well-formed wireless packets it will display.
-
-To save the information to couchdb, specify the -c and --location options.
-The default server is on the default port on localhost, use --couchdb [server] to change.
-
-Several scripts have been added to queries/. They perform rudimentary queries
-on the data saved, such as presenting an ascii graph of probes, searching for
-specific ssids, and showing unique clients, ssids, and vendors. In-progress.
-
-Currently recommendaged usage:
-
-<code>
-sigmon --location here -c &
-
-queries/graph.py
-
-</code>
-
-This will listen for probes in the background and insert them into a couchdb.
-The second command will show a graph of the collected probes for the current date.
-
+In-program help is available by striking the 'h' key.
 <pre>
-sigmon [interface] 
-	-h		show this help 
+      space       display status
+      s           choose sort method
+      a           show access point list
+      c           show client list
+      f           filter clients
+      \           search for mac or ssid
+      /           highlight search
+      G           display graphs [soon]
+      T           show running threads
+      A           add an interface
+      D           set debug level
+</pre>
 
-	-f		add a mac to favorite list (--fav) 
-	-i		select interface (--interface) 
-	-c		use couchdb. specify --location [location] first
-	-l		stop after x number of packets (--limit) 
-	-t		tailable output (--tail) 
-	-d		print debug to stdout (--debug) 
-
-	--location	specify location for couchdb
-
-version 0.9c 
+Command line options:
+<pre>
+sigmon.py [options] [interface],...
+          listen for wireless probe requests
+           -h          show this help
+      
+           -f          add a mac to favorite list (--fav [mac])
+           -d          print debug to stdout, more for more info (--debug)
+           -t          tailable (CSV) output (--tail)
+           -q          quiet output (--quiet)
+      
+      version 0.9h
 </pre>
 
 Examples
 ========
 <pre>
-root#kali pts/0-/root/code/sigmon] ./sigmon
- IF: mon0 18 probes [ Started: 10 seconds ago ][ 2014-10-17 23:28:48.117824 ][ 3 Clients ][ 1 SSIDs ][ sorting by last seen
+  [ Started: 3 minutes ago ][ Mon Oct 27 21:42:22 2014 ][ 8 Clients ][ 8 SSIDs ][ 4 Vendors ][ sorted by vendor
 
-				Close Clients:
- STATION					PWR	Probes
+	STATION						Signal	#Lost	#Probes	SSIDs
+                                    Close Clients:
 
-  50:cc:f8:6f:xx:xx  (Samsung Electro Me)	-34      5        [ANY]
+2  *5c:f9:38:xx:xx:xx (Apple, Inc / iPad         )	-42	0      76      [ANY]
 
-				Farther clients:
- STATION					PWR	Probes
+                                   Farther Clients:
 
-  7c:61:93:ad:xx:xx  (HTC Corporation   )	-74      9        NETGEAR01,[ANY]
-  c4:43:8f:66:xx:xx  (LG Electronics    )	-73      4        [ANY]
+2   48:d7:05:xx:xx:xx  (Apple                     )	-86	2      98      netgear
+2   b0:9f:ba:xx:xx:xx  (Apple                     )	-91	0      15      linksys
+1   2c:41:38:xx:xx:xx  (Hewlett-Packard Company   )	-76	0      71      [ANY], default
+0   cc:9e:00:xx:xx:xx  (Nintendo Co., Ltd.        )	-78	0      6       dlink
+
+                                Recently Seen Clients:
+
+1   44:4c:0c:xx:xx:xx  (Apple                     )	-73	0      12      [ANY]
+1   4c:82:cf:xx:xx:xx  (Echostar Technologies     )	-72	0      1       [ANY]
+
+                                     Loud Clients:
+
+1  *78:ca:39:3f:b6:c8  (Apple / rocketbu          )	-80	1      174     
+        McDonalds Free Wifi, Full O Beans, VCLibrary, Marriot
+
+
+  sigmon 0.9h on mon0,mon1,mon2             2,026/80,852/4,072 probes/pkts/dropped                        [h]elp  [q]uit
+
+> 
 </pre>
 
 Caveats
 =======
 
-Some wireless cards won't report correct signal levels (some onboard laptop cards)<br>
-No functions to view the saved data (yet)<br>
-Will fill your screen after 10000 packets or a couple dozen clients<br>
 Can cause your cat to do weird things<br> 
+
+BUGS
+====
+
+Scapy regularly delivers malformed packets
 
 TODO
 ====
 
-Add other output options, sqlite, sqlachemy<br>
-Add curses display :D<br>
+Reimpliment a database/sqlachemy<br>
+Add real curses display :D<br>
 
 Contact
 =======

@@ -1,12 +1,14 @@
 #!/usr/bin/python -u
 '''
-probe.py v.09g - cbt 10/01/14
-last modified 17 oct 01:48 pst
+probe.py v0.9h - cbt 10/01/14
+last modified 25 oct 12:58 pst
 
 taken from somewheres else ....
 listen for wireless probe requests
 
 TODO
+
+work on pcap import, and snoopy.db import
 
 Work out various displays, 'noisy' clients, common ssids
 
@@ -23,13 +25,50 @@ calibration?
 cards report different power levels
 
 dont use couchdb yet, takes massive space
+
+- change options during runtime
+- data base like ...
+
 '''
 
-import os, sys, signal, string, re
-import threading, datetime as dt, time
-import logging, getopt, humanize as pp
+'''
+
+rewrite plans:
+
+after reading code for snoopy and airodump-iv I think I will
+try and implement the methods that they used, classes, plugins,
+curses, and clearer code organization.
+
+Class Sniffer
+Class Sigmon
+Class Data?
+
+'''
+
+# read code, comment code, write code
+# write code, write code, read code
+# write code, comment code, comment code
+# comment code, comment code, read code
+
+import os, sys, tty, termios, signal, string
+import re, time, getopt, threading, logging
+import humanize as pp, datetime as dt
+import getch, ConfigParser
+
+from select import select
 from threading import current_thread
-import ConfigParser, pprint, getch
+
+from ansi.cursor import up, down
+from ansi.colour.fx import reset
+from colors import bold as b, underline as ul, italic as i, negative as neg
+
+import textwrap as text
+
+#import locale
+#from gettext import gettext as _
+#import i18n
+
+#_ = i18n.language.ugettext #use ugettext instead of getttext to avoid unicode errors
 
 logging.getLogger('scapy.runtime').setLevel(logging.ERROR) # quiet scapy ipv6 error
 
@@ -39,7 +78,7 @@ from scapy.all import sniff, Dot11, Dot11Elt, IP
 
 from netaddr import *     # MAC Address OUI Vendor Lookups - could offload to own db
 
-# packet specification
+# packet observation
 # used to hold packet information before being placed into conf.client
 class Packet:
   def __init__(self):
@@ -47,6 +86,7 @@ class Packet:
     self.firstseen=None
     self.mac=None
     self.ssid=None
+    self.bssid=None
     self.crypto=set()
     self.capability=None
     self.signal=0
@@ -62,39 +102,32 @@ class Packet:
 
 # client observation
 class Client:
-  mac=None
-  firstseen=None
-  lastseen=None
-  probes=0
-  ssids=list()
-  bssid=None
-  signal=list()
-  channel=0
-  vendor=None
-  interface=None
-  ostype=None
-  dropped=0
-  rate=None
-  packets=0
-
-  # so this is why it was only using one object/sharing values ...
   def __init__(self, mac):
     self.mac = mac
     self.ssids=list()
     self.firstseen=None
     self.lastseen=None
     self.probes=0
-    self.bssid=None
+    self.bssids=list()
     self.signal=list()
     self.vendor=None
     self.rate=None
     self.dropped=0
     self.packets=0
     self.interface=None
+    self.seen=list()
+    self.sunc=0
 
-  def show(self):
-      return [ self.mac, self.signal[-1], self.bssid, self.probes, self.packets, self.dropped, self.firstseen, self.lastseen , self.interface ]
-
+  def pr(self,full=False):
+    return [ [ self.mac, \
+              avg(self.signal), max(self.signal), min(self.signal), self.signal[-1],\
+              list(self.bssids), self.probes, self.packets, self.dropped, \
+              dt.datetime.strftime(dt.datetime.fromtimestamp(float(self.firstseen)), '%X %D'), \
+              dt.datetime.strftime(dt.datetime.fromtimestamp(float(self.lastseen)), '%X %D'), \
+              self.interface ], \
+             [ list(self.ssids) if full == True else '' ] , \
+             [ self.seen[x] for x in range(0,len(self.seen)) ] , \
+             [ self.signal[x] for x in range(0,len(self.signal)) ] ]
 
 # favorite mac addresses
 class Fav:
@@ -108,38 +141,87 @@ class Fav:
 # the configuration object, with everything in it (including globals and defaults options)
 class CONF:
   def __init__(self):
-    self.version = '0.9g'
+    self.version = '0.9h'
     self.interfaces = list()
+    self.binary = os.path.basename(__file__)
 
-    self.limit = 0
+    # screen refresh
+    self.screen_refresh = 10
+
+    self.running = 1
+
     self.packets = 0
     self.probes = 0
     self.dropped = 0
-    self.uptime = 0
-    
-    # location for couchdb
-    self.location = None
+    self.uptime = time.time()
     
     # signal threshold for nearby devices
-    self.signal_max = 0
+    self.signal_thresh = -62
     
+    # filter clients not seen for 90 seconds
+    self.seen_thresh = 90
+    
+    self.fulldisplay = True
+    self.filterdisplay = True
+
     self.clientcount = 0
     self.ssidcount = 0
-    
+    self.vendorcount = 0
+    self.vendors = set()
+
     self.fav = dict()
     self.c = dict() # clients
+    self.ssids = set()
     self.opts = set() 
+    self.search = None
+    self.viewfilter = ''
+
+    # used for screen calcs
+    self.cols = 0
+    self.rows = 0
     
     self.db = None
-    self.couch = None
-    self.couchserver = ''
+    
+    self.defaultsort = 'last seen'
+    
+    # store packets or not?
+    self.defaultstore = 0
     
     self.sndplayer = ''
     self.sndplayeropts = ''
     self.newclientsound = ''
     
-    self.getopts = 'qhi:df:l:tc'
-    self.getoptslong = ['help', 'quiet','interface=', 'debug', 'couchdb=','fav=', 'limit=','tail', 'location=']
+    self.prompt = '\r> '
+    
+    self.getopts = 'qhdtf:'
+    self.getoptslong = ['help', 'quiet', 'debug', 'fav=', 'tail']
+    
+    self.help_usage = ''' %s [options] [interface],...
+          listen for wireless probe requests
+           -h          show this help
+      
+           -f          add a mac to favorite list (--fav [mac])
+           -d          print debug to stdout, more for more info (--debug)
+           -t          tailable (CSV) output (--tail)
+           -q          quiet output (--quiet)
+      
+      version %s''' % ( self.binary, self.version )
+    
+    self.help_keys = '''
+      space       display status
+      s           choose sort method
+      a           show access point list
+      c           show client list
+      f           filter clients
+      F           toggle filter view
+      d           toggle verbose display
+      \           search for mac or ssid
+      /           highlight search
+      T           show running threads
+      A           add an interface
+      D           set debug level
+      o           set options?
+''' 
 
 # what bugs?
 # log levels: [0] debug [1] verbose [2] everything
@@ -150,7 +232,7 @@ def debug(level, log):
   if level == 0 or \
       (level == 1 and 'verbose' in conf.opts) or \
       (level == 2 and 'trace' in conf.opts):
-    sys.stderr.write('%s  %s\n' % (dt.datetime.now(), log))
+    sys.stderr.write('\r%s  %s\n' % (dt.datetime.now(), log))
     sys.stderr.flush()
   
 # TODO: remove all symbols, spaces, lowercase
@@ -165,19 +247,38 @@ def clear_screen():
 
 # ansi print screen - simulate airodump-ng
 def show(out):
-  if 'debug' not in conf.opts and \
-      'tail' not in conf.opts:
-    clear_screen()
-
+  if conf.search:
+    out = re.sub(conf.search,neg(conf.search),out, flags=re.IGNORECASE)
   sys.stdout.write('%s\n' % out)
   sys.stdout.flush()
 
+# non-blocking, non-portable getchar
+def getchar():
+  fd = sys.stdin.fileno()
+  old_settings = termios.tcgetattr(fd)
+  
+  try:
+    ch=''
+    tty.setraw(sys.stdin.fileno())
+    [i, o, e] = select([sys.stdin.fileno()], [], [], conf.screen_refresh)
+    if i: ch=sys.stdin.read(1)
+    else: ch=''
+  except:
+    pass
+  finally:
+    termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+    print '\r',ch,'\r',
+    return ch
+  
 # main packet processing function - called by scapy.sniff()
 # somehow I can't get threads/timers to work in conjunction with scapy
 # which presents its own problem - need to figure out what to do,
 # or read from a db in a seperate program
 
 def sniffprobes(packet):
+  if conf.running == 0:
+    return
+
   p = Packet()
   thread = current_thread()
   
@@ -196,47 +297,45 @@ def sniffprobes(packet):
             conf.c[packet.addr2].dropped += 1
           debug(2,'Dropping bad packet from %s on %s' % (packet.addr2, curr_iface))
           #return
-      except:
+      except Exception as inst:
         debug(2,'Dropping bad packet on %s' % curr_iface)
         #return
   
   # bad packets arent packets
   conf.packets += 1
   
-  if conf.limit != 0 and conf.probes >= conf.limit:
-    debug(0,'Saw %s probes, exiting.' % (conf.limit))
-    sys.exit(0)
-  
-  #debug('Got ' + str(len(str(packet.payload))))
   # trying to determine packet size?
-  
   # eliminate malformed/bad packets
   
   try: packet
-  except:return debug(2,'No Packet')
+  except: return # debug(2,'No Packet')
   
   try: packet.info
-  except: return debug(2,'No Packet')
+  except: return # debug(2,'No Packet')
   
   # check the mac later, maybe a mac class that returns xyz error
   try: p.mac = packet.addr2[:32]
-  except: return debug(2,'No MAC Address')
+  except: return # debug(2,'No MAC Address')
   
   try: packet[Dot11].addr3
-  except: return debug(2,'No BSSID Address')
+  except: return # debug(2,'No BSSID Address')
   
-  try: p.bssid = packet[Dot11].addr3[:18]
-  except: return debug(2,'No BSSID Address(2)')
+  try: packet[Dot11].addr3[:18]
+  except: return # debug(2,'No BSSID Address(2)')
 
-  p.lastseen = str(packet.time)
-  p.size = packet.sprintf('%IP.len%')
-  p.interface = curr_iface
+  try:
+    p.lastseen = str(packet.time)
+    p.size = packet.sprintf('%IP.len%')
+    p.interface = curr_iface
+  except Exception as inst:
+    debug(2,'ERROR getting packet time/size/iface - %s' % inst)
+    return
   
   try:
     p.ptype = packet.type
     p.subtype = packet.subtype
-  except:
-    debug(2,'Cant get packet type')
+  except Exception as inst:
+    debug(2,'Cant get packet type - %s' % inst)
     return
   
   try:
@@ -251,19 +350,21 @@ def sniffprobes(packet):
   except TypeError:
     debug(1,'ERROR Resolving MAC: %s ' % (p.mac))
   except NotRegisteredError:
-    debug(1,'ERROR Invalid MAC? : %s ' % (p.mac))
+    debug(3,'ERROR Invalid MAC? : %s ' % (p.mac))
     return
     #p.vendor = 'UNREGISTERED'       # hackers change their macs ...
 
   # if packet is a management/probe request
   if (packet.haslayer(Dot11) and packet.type == 0 and packet.subtype in (0,2,4)):
     try:
-      p.ssid = str(packet[Dot11Elt].info.decode('utf-8')[:32]) if len(packet.info) else '[ANY]'
+      p.ssid = packet[Dot11Elt].info.decode('utf-8')[:32]
       p.ssid = re.sub('\n','',p.ssid)
-    except UnicodeDecodeError:
+    except:
       # bad packet?
-      p.ssid = '[UNKNOWN]'
+      #p.ssid = '[UNKNOWN]'
       next
+    if p.ssid == '':
+      p.ssid = '[ANY]'
 
     try: p.channel = ord(packet[Dot11Elt:3].info)
     except: p.channel = '0' # broadcast/any requests have no channel
@@ -276,7 +377,7 @@ def sniffprobes(packet):
     try:
       conf.c[p.mac]
     except:
-      debug(0,'New Client: ' + p.mac)
+      debug(0,'New Client: %s ' % p.mac)
     
       conf.clientcount += 1
       
@@ -285,27 +386,39 @@ def sniffprobes(packet):
       conf.c[p.mac].vendor = p.vendor
       conf.c[p.mac].interface = p.interface
     
-    conf.c[p.mac].bssid = p.bssid
+    if p.bssid not in conf.c[p.mac].bssids:
+      conf.c[p.mac].bssids.append(p.bssid)
+  
     conf.c[p.mac].signal.append(p.signal)
+    
+    conf.c[p.mac].seen.append(p.lastseen)
     conf.c[p.mac].lastseen = p.lastseen
-    p.firstseen = conf.c[p.mac].firstseen
+    p.firstseen = conf.c[p.mac].firstseen # just in case
+    
+    if p.vendor not in conf.vendors:
+      conf.vendorcount += 1
+      conf.vendors.add(p.vendor)
     
     # increment probe count
     conf.c[p.mac].probes += 1
     
     if p.ssid not in conf.c[p.mac].ssids:
       debug(0,'New SSID for Client %s (%s): %s' % (p.mac, p.vendor, p.ssid))
+      
       # increment SSID count
       if p.ssid != '[ANY]': conf.ssidcount += 1
       conf.c[p.mac].ssids.append(p.ssid)
+      if p.ssid not in conf.ssids:
+        conf.ssids.add(p.ssid)
   
   else:
-    # for layer in list(expand(packet)):
-    # this won't work -- never will see a decrypted packet ..
     if p.mac in conf.c:
       conf.c[p.mac].packets += 1
       
+      '''
       if packet.haslayer(IP) and conf.c[p.mac].ostype == None:
+        # this won't work -- never will see a decrypted packet ..
+        # see the wifi stalking pdf
         debug('Trying to discover %s OS ...' % p.mac)
         conf.c[p.mac].ostype = p0f(packet)
         try:
@@ -314,7 +427,7 @@ def sniffprobes(packet):
           pass
       # some other type of packet
       else:
-        conf.c[p.mac].packets += 1
+      '''
     return
 
   # increment (relevant) packet count
@@ -325,216 +438,470 @@ def sniffprobes(packet):
         (p.mac, p.bssid, p.ssid, p.signal, \
          p.firstseen, p.lastseen, p.interface, p.vendor))
   
-  elif 'couchdb' in conf.opts:
-    output = { 'mac': p.mac, 'bssid': p.bssid, 'ssid': p.ssid, 'signal': p.signal, \
-                'firstseen': p.firstseen, 'lastseen': p.lastseen, 'vendor': p.vendor, \
-                'location': conf.location, 'iface': p.interface }
+def clientsort(a,b):
+  sort = conf.defaultsort
+  
+  if(sort == 'last seen'):
+    return cmp(conf.c[b].lastseen, conf.c[a].lastseen)
+  elif(sort == 'first seen'):
+    return cmp(conf.c[a].lastseen, conf.c[b].lastseen)
+  elif(sort == 'probes'):
+    return cmp(conf.c[b].probes, conf.c[a].probes)
+  elif(sort == 'probes descending'):
+    return cmp(conf.c[a].probes, conf.c[b].probes)
+  elif(sort == 'power'):
+    return cmp(conf.c[b].signal[-1], conf.c[a].signal[-1])
+  elif(sort == 'power descending'):
+    return cmp(conf.c[a].signal[-1], conf.c[b].signal[-1])
+  elif(sort == 'vendor'):
+    return cmp(conf.c[a].vendor, conf.c[b].vendor)
+  elif(sort == 'vendor descending'):
+    return cmp(conf.c[b].vendor, conf.c[a].vendor)
 
-    doc = ''
+def show_print(sig,sc):
+  if 'trace' in conf.opts:
+    return
+
+  check_screensize()
+  
+  if 'tail' not in conf.opts:
+    maxitems = int(conf.rows) - 20 # width of headers and spacing
+    
+    running_threads = ''
+    for t in threading.enumerate():
+      tname = t.getName()
+      if tname != 'MainThread':
+        running_threads += re.sub('sigmon-sniffer-',',',tname)
+    running_threads = running_threads[1:]
+    
+    header  = '\n  Started: %s ][ %s ]' % (pp.naturaltime(time.time()-conf.uptime), time.ctime())
+    header += '[ %s Clients, %s SSIDs, %s Vendors ]' % \
+        (pp.intcomma( conf.clientcount ), pp.intcomma( conf.ssidcount ), conf.vendorcount)
+    if conf.fulldisplay == True:
+      header += '[ %s items sorted by %s' % ( maxitems, conf.defaultsort)
+      header +=  ', filtering %s clients\n\n' % conf.viewfilter if conf.viewfilter else ''
+      legend = ul('\n\n\tSTATION\t\t\t\t\t\tFirst Seen\t\tLast\t\tAvg/Min/Cur Sig\t#Lost\t#Probes\tSSIDs\n')
+    else:
+      header += '[ sorted by %s' % ( conf.defaultsort)
+      legend = ul('\n\n\tSTATION\t\t\t\t\t\tSignal\t#Lost\t#Probes\tSSIDs\n')
+    
+    header += legend
     
     try:
-      doc = conf.db.save(output)
-    except UnicodeDecodeError:
-      debug(2,'Got some weird ssid - ' + p.ssid)
-      
-      #output['ssid'] = '' + p.ssid
-      # still crashes on unicode / attack ssids ...
-      #doc = conf.db.save(output)
-    
-    if doc != '':
-      debug(1,'Created document %s' % doc['_id'])
-      debug(2,'%s' % doc)
-    
-    if 'quiet' not in conf.opts:
-        sys.stdout.write('%d\r' % conf.probes)
-
-def show_print():
-  if 'tail' not in conf.opts:
-    header = '\n %s probes [ Started: %s ][ %s ][ %s Clients ][ %s SSIDs ][ sorting by %s' % \
-      ( pp.intcomma(conf.probes), \
-        pp.naturaltime( time.time() - conf.uptime ), time.ctime(), \
-        pp.intcomma( conf.clientcount ), pp.intcomma( conf.ssidcount ), 'last seen')
-    
-    legend = '\n\n    STATION\t\t\t\t\t       First Seen\t    Last\t\t Sig Avg/Min/Cur    Rate  #Lost\t   #Probes   SSIDs\n\n'
-              #mac    ven     desc   savg smin sig  rate drop prob ssid
-    
-    outputnear = '\n\n\t\t\t\t\tClose Clients:' + legend
-    outputfar = '\t\t\t\t\tFarther Clients:' + legend
-    outputold = '\t\t\t\t\tRecently Seen Clients:' + legend
-    outputloud = '\t\t\t\t\tLoud Clients:' + legend
-    outputquiet = '\t\t\t\t\tSeldom Seen Clients:' + legend
+      output = headers = {'all':'All','near':'Close','old':'Recently Seen','loud':'Loud','quiet':'Seldom Seen','far':'Farther'}
+      for i, x in headers.items():
+        output[i] = '%s %s %s\n\n' % (' ' * (int(conf.cols) / 2 - (len(str(x)+' Clients:') / 2) - 20), x, ' Clients:')
+    except Exception as inst:
+      debug(0,'ERROR output info: %s' % inst)
 
     # list clients, sorted by last seen
     # soon take key input and offer options . . 
-    for client in sorted(conf.c, cmp=lambda a,b : cmp(conf.c[b].lastseen, conf.c[a].lastseen)):
+    
+    clients = conf.c
+
+    # for deciding wether or not to display client headers
+    near = far = old = loud = quiet = all = 0
+
+    for client in sorted(clients, cmp=lambda a, b: clientsort(a,b)):
+      ssids = ''
       
       debug(0,'Outputting data for %s (%s) %sdBm [%s]' \
-      % (client, conf.c[client].vendor, \
-        conf.c[client].signal[-1], conf.c[client].probes))
+      % (client, clients[client].vendor, \
+        clients[client].signal[-1], clients[client].probes))
     
-      iface_res = re.search('(\d+)', conf.c[client].interface)
+      iface_res = re.search('(\d+)', clients[client].interface)
       iface = iface_res.group(0)
       
       # output list of clients and ssids
       
+      # a way to key certain clients
       if client in conf.fav.keys():
-        out = iface + '  *'
+        out = '%s  *' % iface
       else:
-        out = iface + '   '
+        out = '%s   ' % iface
 
-      # easy way of only printing 'valid' ssids from the set
-      
-      #ssids = ''.join(filter(lambda x:x in string.printable, \
-      #          string.join(list(conf.c[client].ssids),',')))
+      ## reformat SSIDS
+      ssidscopy = sorted(clients[client].ssids)
 
-      ssids = ', '.join(sorted(conf.c[client].ssids))
+      try:
+        if ssidscopy and len(', '.join(ssidscopy)) > 32:
+          #debug(0, 'Length of ssids too long, re-formatting')
 
-      #if len(conf.c[client].ssids) > 4:
-      #  ssids += ' .. [%d more]' % (len(conf.c[client].ssids) - 4)
+          ssids = '\n'
+          
+          for i in text.wrap(', '.join(ssidscopy), width=(int(conf.cols) - 24), \
+              initial_indent='        ', subsequent_indent='        '):
+            ssids += '%s\n' % i
+            maxitems -= 1
+          ssids = ssids.rstrip()
+
+        else:
+          ssids = ', '.join(ssidscopy)
+      except Exception as inst:
+        debug(0,'ERROR Copying SSIDS: %s' % inst)
 
       try:
         conf.fav[client]
-        desc = conf.c[client].vendor[:14] + ' / ' + conf.fav[client][:8]
+        desc = '%s [%s]' % ( clients[client].vendor[:14], conf.fav[client][:8])
       except:
-        desc = conf.c[client].vendor[:24]
+        desc = clients[client].vendor[:24]
       
-              #mac  ven/desc frst  last      savg smin sig      rate drop prob ssids
-      out += '%-18s (%-26s)   %18s   %18s    %-4s %-4s %-4s     %-6s %-8s %-8s %s\n' % (client, desc, \
-          dt.datetime.strftime(dt.datetime.fromtimestamp(float(conf.c[client].firstseen)), '%X %D'),  \
-          dt.datetime.strftime(dt.datetime.fromtimestamp(float(conf.c[client].lastseen)), '%X %D'),  \
-          #time.ctime(float(conf.c[client].firstseen))[4:], \
-          #time.ctime(float(conf.c[client].lastseen))[4:], \
-          avg(conf.c[client].signal), \
-          min(conf.c[client].signal), \
-          conf.c[client].signal[-1], \
-          conf.c[client].rate, \
-          pp.intcomma(conf.c[client].dropped), \
-          pp.intcomma(conf.c[client].probes), \
-          ssids)
+      ## add to display
+      if conf.fulldisplay == True:
+                #mac  ven/desc  frst   last    savg smin sig   drop  prob  ssids
+        out += '%-18s (%-26s)   %18s   %18s    %-4s %-4s %-4s  %-6s  %-6s  %s\n' % (client, desc, \
+            dt.datetime.strftime(dt.datetime.fromtimestamp(float(clients[client].firstseen)), '%X %D'),  \
+            dt.datetime.strftime(dt.datetime.fromtimestamp(float(clients[client].lastseen)), '%X %D'),  \
+            avg(clients[client].signal), min(clients[client].signal), ul(clients[client].signal[-1]), \
+            pp.intcomma(clients[client].dropped), pp.intcomma(clients[client].probes), ssids)
+      else:
+                #mac  ven/desc sig   drop prob  ssids
+        out += '%-18s (%-26s)\t%-4s\t%-6s %-6s  %s\n' % (client, desc, \
+            ul(clients[client].signal[-1]), pp.intcomma(clients[client].dropped), pp.intcomma(clients[client].probes), \
+            ssids)
      
-      # display clients that havn't been seen recently on the bottom
-      # nearby signal
-      if len(conf.c[client].ssids) > 4:
-        outputloud += out
-      elif float(time.time() - 90) > float(conf.c[client].lastseen) and conf.c[client].probes > 10:
-        outputold += out
-      elif int(conf.c[client].signal[-1]) > conf.signal_max:
-        outputnear += out
-      elif int(conf.c[client].signal[-1]) < conf.signal_max:
-        outputfar += out
-      elif conf.c[client].probes < 10:
-        outputquiet += out
-      # far away signal
+      if conf.filterdisplay:
+        # loud client
+        if len(clients[client].ssids) > 4 and maxitems>0 and (conf.viewfilter == '' or re.search('loud',conf.viewfilter)):
+          loud += 1
+          output['loud'] += out
+          maxitems -= 1
+        # hasnt been seen in x seconds
+        elif float(time.time() - conf.seen_thresh) > float(clients[client].lastseen) and maxitems>0 and \
+            (conf.viewfilter == '' or re.search('old',conf.viewfilter)):
+          old += 1
+          output['old'] += out
+          maxitems -= 1
+        # near by clients
+        elif int(clients[client].signal[-1]) > conf.signal_thresh and maxitems>0 and \
+            (conf.viewfilter == '' or re.search('near',conf.viewfilter)):
+          near += 1
+          output['near'] += out
+          maxitems -= 1
+        # far away clients
+        elif int(clients[client].signal[-1]) < conf.signal_thresh and maxitems>0 and \
+            (conf.viewfilter == '' or re.search('far',conf.viewfilter)):
+          far += 1
+          output['far'] += out
+          maxitems -= 1
+        # quiet clients, in the last 15 minutes
+        elif clients[client].probes < 10 and maxitems>0 and (conf.viewfilter == '' or re.search('quiet',conf.viewfilter)):
+          quiet += 1
+          output['quiet'] += out
+          maxitems -= 1
+      else:
+        if maxitems>0:
+          output['all'] += out
+          maxitems -= 1
 
-    show('%s \n %s \n %s \n %s \n %s \n %s' % (header, outputnear, outputfar, outputold, outputloud, outputquiet)) 
+    footer = '  sigmon %s on %s  -  %s/%s/%s probes/pkts/dropped' % \
+        (conf.version, running_threads, pp.intcomma(conf.probes), \
+         pp.intcomma(conf.packets), pp.intcomma(conf.dropped))
+    footer += str(' ' * (int(conf.rows) - (int(conf.rows) - len(footer)) - 20)) + '[h]elp  [q]uit'
+    clear_screen()
+    
+    show(down(int(conf.cols)))
+    show(footer)
+    show(up(conf.cols))
+    show(header)
+    
+    if conf.filterdisplay:
+      show(output['near'] if near else '')
+      show(output['far'] if far else '')
+      show(output['old'] if old else '')
+      show(output['loud'] if loud else '')
+      show(output['quiet'] if quiet else '')
+    else:
+      show(output['all'])
 
+    show(down(int(conf.cols) - 6))
+ 
 def avg(num):
   i = len(num)
   e = 0
   for a in num: e += int(a)
   return e / i
-#return str(float(sum(l))/len(l) if len(l) > 0 else float('nan'))
 
 def sigint(s, f):
+  if 'tail' in conf.opts:
+    sig_shutdown()
+  
   show_stats()
-  time.sleep(1)
+  check_input(1,2)
+
+def waitkey():
+  print '\nPress any key to continue: ',
+  getch.getch()
 
 def show_stats():
   threads = threading.activeCount()
   
-  print 'conf.opts: ' + str(list(conf.opts))
-  print 'Probes: ' + pp.intcomma(conf.probes)
-  print 'Packets: ' + pp.intcomma(conf.packets)
-  print 'Dropped: ' + pp.intcomma(conf.dropped)
-  print 'Signal Maximum: ' + str(conf.signal_max)
-  print 'Clients seen: ' + pp.intcomma(conf.clientcount)
-  print 'SSIDs seen: ' + pp.intcomma(conf.ssidcount)
-  print 'Favorites list: ' + str(list(conf.fav.items()))
-  print 'Interface list: ' + str(list(conf.interfaces))
-  print 'Start time: ' + str(conf.uptime)
-  print 'Threads: ' + str(threads)
-  print 'Clients: ' + str(conf.clientcount)
-  print 'SSIDs: ' + str(conf.ssidcount)
+  print 'conf.opts: %s ' % list(conf.opts)
+   
+  print 'Probes: %s' % pp.intcomma(conf.probes)
+  print 'Packets: %s' % pp.intcomma(conf.packets)
+  print 'Dropped: %s' % pp.intcomma(conf.dropped)
+  print 'Signal Threshold: %s' % conf.signal_thresh
+  print 'Clients seen: %s' % pp.intcomma(conf.clientcount)
+  print 'SSIDs seen: %s' % pp.intcomma(conf.ssidcount)
+  print 'Vendors seen: %s' % conf.vendorcount
+  print 'Favorites list: %s' % list(conf.fav.items())
+  print 'Interface list: %s' % list(conf.interfaces)
+  print 'Start time: %s' % conf.uptime
+  print 'Threads: %d' % threads
   
   print '\n\nPress q to exit, or choose an option:\n'
-  print '[ g ]  [ s ]  [ h ]  [ c ]  [ a ]  [ v ]  [ D ]  [ d ]  [ q ]'
-  print '                    Clients  APs  Vendors               quit'
-  print 'Graphs Statistics Help                    Debug  daemonize'
+  print '[c]lients [a]ccess Points [S]ort [Q]uit [A]dd interface [D]ebug [T]hreads\n'
+  #print '[ g ]  [ s ]  [ h ]  [ c ]  [ a ]  [ v ]  [ D ]  [ d ]  [ q ]'
+  #print '                    Clients  APs  Vendors               quit'
+  #print 'Graphs Statistics Help                    Debug  daemonize'
   print '\nsigmon %s' % conf.version
   
-  inp = getch.getch()
+  waitkey()
+  
+def check_screensize():
+  conf.rows, conf.cols = os.popen('stty size', 'r').read().split()
 
-  if inp == 'q':
-    sys.exit(1)
-  elif inp == 's':
+#Class Keys 
+#['a':'access_points','x','xxx']
+#for key, sub
+#switch key: exec sub
+
+# key bindings -- a cleaner way ..
+def check_input(sig,sc):
+  if 'tail' in conf.opts:
+    return
+  
+  print conf.prompt,
+  inp = getchar()
+  
+  if inp == 'h':
+    print conf.help_keys
+    waitkey()
+  
+  elif inp == ' ':
     show_stats()
+  
+  elif inp == '/':
+    print 'Enter phrase to highlight: ',
+    try:
+      conf.search = raw_input()
+    except:
+      conf.search = ''
+  
+  elif inp == 'F':
+    conf.filterdisplay = False if conf.filterdisplay == True else True
+  
+  elif inp == 'f':
+    if conf.filterdisplay == False:
+      print 'Filtering disabled, enable with "F"'
+      waitkey()
+      return
+    vf = raw_input('Enter client filter [loud, quiet, far, near, old]:')
+    if vf in ('loud','quiet','far','near','old'):
+      conf.viewfilter = vf
+    else:
+      conf.viewfilter = ''
+
+  elif inp == 'd':
+    conf.fulldisplay = False if conf.fulldisplay == True else True
+    
+  elif inp == '\\':
+    halfhr = 60 * 60 / 2
+    sixhr = halfhr * 12
+    halfdy = sixhr * 2
+    day = halfdy
+
+    print 'Enter MAC/SSID Address to search for:',
+    search = raw_input()
+    try:
+      if re.search('[a-zA-Z0-0][-:][a-zA-Z0-9]',search):
+        (cl, ss, st, si) = conf.c[search].pr(full=True)
+        
+        print cl
+        print ss if ss else ''
+        #print st if st else ''
+        #print si if si else ''
+        #seen_total = float(st[0]) - float(st[-1])
+        #if(seen_total < halfhr):
+      else:
+        clients = conf.c
+        print ''
+        
+        for client in sorted(clients, cmp=lambda a,b: cmp(clients[a].vendor, clients[b].vendor)):
+          ssids = clients[client].ssids
+          if search in ssids:
+            (cl, ss, si, st) = clients[client].pr(full=True)
+            print clients[client].vendor
+            print '\t',
+            print cl
+            print '\t',
+            print ss
+
+      waitkey()
+    except Exception as inst:
+      print '%s not found - %s' % (search, inst)
+      waitkey()
+  
+  elif inp == 'E':
+    code = raw_input('Code to exec:')
+    try:
+      exec(code) in globals()
+    except Exception as inst:
+      print 'Error in code: %s - %s' % ( code, inst)
+    
+    waitkey() 
+  
+  elif inp == 'q':
+    sig_shutdown()
+  
+  elif inp == 's':
+    print '[l] last seen [f] firstseen [p] probes',
+    print '[P] probes desc [t] signal [T] signal desc',
+    print '[v] vendor [V] vendor desc:  ',
+    
+    inp = getchar()
+    
+    if inp == 'l':
+      conf.defaultsort = 'last seen'
+    elif inp == 'f':
+      conf.defaultsort = 'first seen'
+    elif inp == 'p':
+      conf.defaultsort = 'probes'
+    elif inp == 'P':
+      conf.defaultsort = 'probes descending'
+    elif inp == 't':
+      conf.defaultsort = 'power'
+    elif inp == 'T':
+      conf.defaultsort = 'power descending'
+    elif inp == 'v':
+      conf.defaultsort = 'vendor'
+    elif inp == 'V':
+      conf.defaultsort = 'vendor descending'
+    else:
+      print 'Invalid entry'
+      return
+
+    print 'Changing sort method to %s' % conf.defaultsort
+    time.sleep(0.6)
+  
+  elif inp == 'v':
+    print '%s vendors:' % conf.vendorcount
+    
+    vendors = conf.vendors
+    for vendor in sorted(vendors):
+      print '%s: ' % vendor
+
+      clients = conf.c
+      for client in clients:
+        if clients[client].vendor == vendor:
+          print '\t%s - %s\t' % (client, time.ctime(float(clients[client].lastseen)))
+    
+    waitkey()
+
   elif inp == 'c':
-    for mac in conf.c:
-      print '\t', conf.c[mac].show()
-  elif inp == 't':
+    print '%s clients:' % conf.clientcount
+    
+    print '\tmac, sigavg, sigmax, sigmin, signal, bssid, probes,',
+    print 'packets, dropped, first, lastseen, interface\n'
+
+    # make a copy, having errors with threads?
+    clients = conf.c
+    
+    for mac in sorted(clients):
+      (cl, ss, si, st) = clients[mac].pr()
+      print clients[mac].vendor
+      print cl
+      print ss
+      print '\t', list(clients[mac].ssids)
+      
+      #today = dt.datetime.today()
+      #morning = time.mktime(dt.datetime.timetuple(dt.datetime(int(today.strftime('%Y')), \
+      #    int(today.strftime('%m')),int(today.strftime('%d')))))
+      
+      #for hour in range(0,23):
+      #  pass
+      # .,;xX  traffic graph ...
+    waitkey()
+  
+  elif inp == 'a':
+    print '%s ssids:' % conf.ssidcount
+    
+    ssids = conf.ssids
+    clients = conf.c
+    
+    for ssid in sorted(ssids):
+      print '\t', ssid, ': ',
+      for mac in clients:
+        clients = 0
+        if ssid in ssids:
+          clients += 1
+        print '%d clients' % clients
+    waitkey()
+  
+  elif inp == 'T':
     for thread in threading.enumerate():
       print '\t', thread
+    waitkey()
+  
   elif inp == 'A':
     print 'Enter monitor interface to run on: ',
-    inp = getch.getch()
+    inp = getchar()
     try:
       start_sniffer(['mon'+str(inp)])
-    except:
-      pass
+    except Exception as inst:
+      debug(0,'ERROR Starting sniffer - %s' % inst)
+      waitkey()
   
   elif inp == 'D':
     print '[0] off [1] verbose [2] debug [3] trace - Enter debug level: ',
-    inp = int(getch.getch())
+    inp = getchar()
 
     if inp == 0:
       try:
         conf.opts.remove('trace')
         conf.opts.remove('verbose')
         conf.opts.remove('debug')
-      except:
+      except Exception as inst:
         pass
     elif inp == 1:
-      conf.opts.add('verbose')
+      conf.opts.add('debug')
     elif inp == 2:
-      conf.opts.add('verbose')
       conf.opts.add('debug')
+      conf.opts.add('verbose')
     elif inp == 3:
-      conf.opts.add('verbose')
       conf.opts.add('debug')
+      conf.opts.add('verbose')
       conf.opts.add('trace')
     else:
-      print 'Invalid selection'
-
+      print 'Invalid selection: ', inp
+      waitkey()
     return
-
-
-def usage():
-  print os.path.basename(__file__) + ' [options] [interface],...' + \
-    '\tlisten for wireless probe requests\n'
-  print '\t' + '-h' + '\t\t' + 'show this help'
-  print ''
-  print '\t' + '-f' + '\t\t' + 'add a mac to favorite list (--fav [mac])'
-  print '\t' + '-c' + '\t\t' + 'use couchdb for output (--couchdb [server])'
-  print '\t' + '  ' + '\t\t' + '  use --location [location] when using couchdb'
-  print '\t' + '-l' + '\t\t' + 'stop after x number of packets (--limit [packets])'
-  print '\t' + '-d' + '\t\t' + 'print debug to stdout, more for more info (--debug)'
-  print '\t' + '-t' + '\t\t' + 'tailable (CSV) output (--tail)'
-  print '\t' + '-q' + '\t\t' + 'quiet output (--quiet)'
-  print ''
-  print 'version ' + conf.version
   
-  sys.exit(1)
+def sig_shutdown():
+  print '\nExiting ...',
+  
+  conf.running = 0
+  
+  signal.signal(signal.SIGALRM,signal.SIG_DFL)
+  signal.signal(signal.SIGINT, signal.SIG_DFL)
+  
+  # give threads time to exit
+  time.sleep(3)
+  sys.exit(0)
 
 def do_getopts(argv):
   try:
     opts, args = getopt.getopt(argv, conf.getopts, conf.getoptslong)
-  except:
-    print 'Argument error.'
-    usage()
+  except Exception as inst:
+    print 'Argument error - %s' % inst
+    print conf.help_usage
+    sys.exit(1)
 
   for opt, arg in opts:
     if opt in ('-h', '--help'):
-      usage()
+      print conf.help_usage
+      sys.exit(0)
     
     elif opt in ('-d', '--debug'):
       if 'verbose' in conf.opts:
@@ -545,51 +912,16 @@ def do_getopts(argv):
        
       conf.opts.add('debug')
     
-    elif opt in ('-l', '--limit'):
-      conf.limit = int(arg)
-    
     elif opt in ('-q', '--quiet'):
       conf.opts.add('quiet')
     
-    elif opt == '--location':
-      conf.location = arg
-    
-    elif opt in ('-c', '--couchdb'):
-      try:
-        conf.couchdbserver = arg
-      except: 
-        pass
-
-      try:
-        import pycouchdb as couchdb
-      except:
-        print 'Please install pycouchdb (easy_install pycouchdb) before using CouchDB.'
-        sys.exit(1)
-      
-      conf.opts.add('couchdb')
-      
-      debug(0,'Connecting to couchdb server %s' % conf.couchserver)
-      
-      try:
-        conf.couch = couchdb.Server(conf.couchserver)
-      except:
-        debug(0,'Error initializing couchdb.' + conf.couch)
-        sys.exit(2)
-
-      try:
-        conf.db = conf.couch.database('sigmon')
-      except:
-        conf.couch.create('sigmon')
-        debug(0,'Creating database `sigmon`')
-  
     elif opt in ('-f', '--fav'):
       # add a re for case -f mac=who --fav=mac=who?
       conf.fav[arg] = True
-      debug(0,'added ' + arg + ' to favorites')
+      debug(0,'added %s to favorites' % arg)
     
     elif opt in ('-t', '--tail'):
       conf.opts.add('tail')
-    
   
   ifaces = re.findall('mon\d+',str(args))
   for iface in ifaces:
@@ -602,83 +934,98 @@ def start_sniffer(ifaces):
   threads=[]
   
   for interface in ifaces:
-    debug(1,'Creating thread sigmon-sniffer-'+interface)
+    debug(1,'Creating thread sigmon-sniffer-%s' % interface)
   
     # sniff count packets, and do not store them in memory
-    t = threading.Thread(target=sniff,kwargs={'prn':sniffprobes,'iface':interface,'store':0}, \
-      name='sigmon-sniffer-' + interface)
+    t = threading.Thread(target=sniff,kwargs= \
+        {'prn':sniffprobes,'iface':interface, 'store':conf.defaultstore},
+          name='sigmon-sniffer-%s' % interface)
     
     threads.append(t)
     
-    signal.siginterrupt(3,True)
-    
-    for worker in threads:
-      debug(0,'%s worker starting' % (worker.name))
-      try:
-        worker.start()
-        worker.daemonize()
-      except:
-        debug(0,'FATAL %s worker error' % (worker.name))
+  for worker in threads:
+    debug(0,'%s worker starting' % (worker.name))
+    try:
+      worker.daemon = True
+      worker.start()
+    except Exception as inst:
+      debug(0,'FATAL %s worker error - %s' % (worker.name, inst))
 
 def main(argv):
   global conf
   
   conf = CONF()
-  conf.uptime = time.time()
   
+  try:
+    config = ConfigParser.ConfigParser()
+    config.read(['sigmon.cfg', os.path.expanduser('~/.sigmonrc')])
+   
+    conf.sndplayer = config.get('sound','player')
+    conf.sndplayeropts = config.get('sound','playeropts')
+    conf.newclientsound = config.get('sound','newclientsound')
+    conf.signal_thresh = abs(int(config.get('general','signal_thresh'))) - 100
+    conf.screen_refresh = int(config.get('general','screen_refresh'))
+  
+    for iface, desc in config.items('interfaces'):
+      if iface not in conf.interfaces:
+        conf.interfaces.append(iface)
+
+    for favmac,desc in config.items('favorites'):
+      fav = re.sub(r'-',r':',favmac)
+      conf.fav[fav] = desc
+  
+  except Exception as inst:
+    debug(0,'ERROR reading sigmon.cfg or ~/.sigmonrc - %s' % inst)
+
   do_getopts(argv)
-
-  config = ConfigParser.ConfigParser()
-  config.read(['sigmon.cfg', os.path.expanduser('~/.sigmonrc')])
- 
-  conf.sndplayer = config.get('sound','player')
-  conf.sndplayeropts = config.get('sound','playeropts')
-  conf.newclientsound = config.get('sound','newclientsound')
-  conf.couchserver = config.get('couch','server') 
-  conf.signal_max = int(config.get('general','signal_max'))
   
-  for favmac,desc in config.items('favorites'):
-    fav = re.sub(r'-',r':',favmac)
-    conf.fav[fav] = desc
-
   if 'quiet' not in conf.opts and 'debug' not in conf.opts \
-      and 'tail' not in conf.opts and 'couchdb' not in conf.opts:
+      and 'tail' not in conf.opts:
     conf.opts.add('print')
   
-  # choose the default interface if none are specified
+  # choose the default interface if none is specified
   if len(conf.interfaces) < 1:
     conf.interfaces.append('mon0')
       
-  if 'couchdb' in conf.opts and conf.location == None:
-    print 'Please provide a physical location name for couchdb.'
-    sys.exit(2)
-
   conf.interfaces = sorted(conf.interfaces)
   
-  #if len(conf.interfaces) > 1:
-  #  conf.interfaces[-1] = 'and ' + conf.interfaces[-1]
-  
-  print 'Listening for %s probes from %s ' % \
-    ( 'unlimited' if conf.limit == 0 else conf.limit, ', '.join(list(conf.interfaces)) )
+  print 'Listening for probes from %s ' % \
+    ( ', '.join(list(conf.interfaces)) )
 
   ## display csv header
   if 'tail' in conf.opts:
     print 'mac,bssid,ssid,signal,firstseen,lastseen,interface,vendor'
   
-  start_sniffer(conf.interfaces)
-    
+  # on the specified interval, run show_print - print what is in conf.clients
+  # sniff is running on another thread, so this updates automagically
+  
   signal.signal(signal.SIGINT, sigint)
+  signal.signal(signal.SIGALRM,show_print)
+  signal.setitimer(signal.ITIMER_REAL,conf.screen_refresh)
   
-  try:
-    while(7):
-      time.sleep(3)
-      show_print()
+  start_sniffer(conf.interfaces)
   
-  except KeyboardInterrupt:
-    threading.current_thread().join()
-    
-    show_stats()
+  # change the linux terminal title
 
+  print "\033]0;sigmon %s [%s]\007" % (conf.version, ', '.join(conf.interfaces))
+
+  while conf.running:
+    try:
+        show_print(1,2)
+    except Exception as inst:
+      print 'ERROR in main show_print: %s' % inst
+      waitkey()
+    try:
+        check_input(1,2)
+    except Exception as inst:
+      print 'ERROR in main check_input: %s' % inst
+      waitkey()
+
+
+  # bye lates
+  sig_shutdown()
+
+# fasten your helmets
 if __name__ == '__main__':
     main(sys.argv[1:])
 
