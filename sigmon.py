@@ -1,6 +1,6 @@
 #!/usr/bin/python -u
 '''
-probe.py v0.9h - cbt 10/01/14
+probe.py v0.9h-2 - cbt 10/01/14
 last modified 25 oct 12:58 pst
 
 taken from somewheres else ....
@@ -20,6 +20,12 @@ Work out various displays, 'noisy' clients, common ssids
 BUGS
 
 Malformed packets [may] squeak through, but less likely
+Malformed packets may mean clients not being seen
+Tshark/Airodump-ng displays more clients
+
+How do I display data from clients over time ...
+To display patterns?
+
 
 calibration? 
 cards report different power levels
@@ -43,6 +49,7 @@ Class Sniffer
 Class Sigmon
 Class Data?
 
+save pcap, read pcap, save couch, save sql, save 
 '''
 
 # read code, comment code, write code
@@ -54,6 +61,8 @@ import os, sys, tty, termios, signal, string
 import re, time, getopt, threading, logging
 import humanize as pp, datetime as dt
 import getch, ConfigParser
+
+import pickle
 
 from select import select
 from threading import current_thread
@@ -465,7 +474,7 @@ def show_print(sig,sc):
   check_screensize()
   
   if 'tail' not in conf.opts:
-    maxitems = int(conf.rows) - 20 # width of headers and spacing
+    maxitems = int(conf.rows) - 19 # width of headers and spacing
     
     running_threads = ''
     for t in threading.enumerate():
@@ -527,7 +536,7 @@ def show_print(sig,sc):
         if ssidscopy and len(', '.join(ssidscopy)) > 32:
           #debug(0, 'Length of ssids too long, re-formatting')
 
-          ssids = '\n'
+          ssids = '[ %s ]\n' % b(len(ssidscopy))
           
           for i in text.wrap(', '.join(ssidscopy), width=(int(conf.cols) - 24), \
               initial_indent='        ', subsequent_indent='        '):
@@ -551,7 +560,7 @@ def show_print(sig,sc):
                 #mac  ven/desc  frst   last    savg smin sig   drop  prob  ssids
         out += '%-18s (%-26s)   %18s   %18s    %-4s %-4s %-4s  %-6s  %-6s  %s\n' % (client, desc, \
             dt.datetime.strftime(dt.datetime.fromtimestamp(float(clients[client].firstseen)), '%X %D'),  \
-            dt.datetime.strftime(dt.datetime.fromtimestamp(float(clients[client].lastseen)), '%X %D'),  \
+            pp.naturaltime(time.time()-float(clients[client].lastseen)),  \
             avg(clients[client].signal), min(clients[client].signal), ul(clients[client].signal[-1]), \
             pp.intcomma(clients[client].dropped), pp.intcomma(clients[client].probes), ssids)
       else:
@@ -600,7 +609,7 @@ def show_print(sig,sc):
     footer += str(' ' * (int(conf.rows) - (int(conf.rows) - len(footer)) - 20)) + '[h]elp  [q]uit'
     clear_screen()
     
-    show(down(int(conf.cols)))
+    show(down(int(conf.cols)-1))
     show(footer)
     show(up(conf.cols))
     show(header)
@@ -887,7 +896,12 @@ def sig_shutdown():
   signal.signal(signal.SIGINT, signal.SIG_DFL)
   
   # give threads time to exit
-  time.sleep(3)
+  time.sleep(1)
+  try:
+    pickle.dump(conf,open('sigmon.p','wb'))
+  except Exception as inst:
+    print('Error saving state: %s' % inst)
+
   sys.exit(0)
 
 def do_getopts(argv):
@@ -954,8 +968,21 @@ def start_sniffer(ifaces):
 def main(argv):
   global conf
   
-  conf = CONF()
+  # test for sigmon.p and load it otherwise initialize conf
+  sessionfile = '.sigmon.p'
   
+  if os.path.isfile(sessionfile):
+    print 'Loading session ...'
+    try:
+      conf = pickle.load(open(sessionfile,'rb'))
+      conf.uptime = time.time()
+    except Exception as inst:
+      print 'Error loading sessionfile %s: %s' % ( sessionfile, inst)
+      sys.exit(1)
+
+  else:
+    conf = CONF()
+
   try:
     config = ConfigParser.ConfigParser()
     config.read(['sigmon.cfg', os.path.expanduser('~/.sigmonrc')])
