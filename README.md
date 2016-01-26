@@ -1,13 +1,13 @@
-sigmon 0.9h
+sigmon 0.9i
 ======
 
-Display wireless probe requests like airodump-ng in python and scapy<br>
+Display/Record wireless probes like airodump-ng with scapy/wireshark<br>
 
 sigmon, or Signal Monitor, displays probe requests from wireless clients in range.<br>
 The output is similar to that of airodump-ng from the aircrack-ng suit.<br>
 
-It can also play a sound when a new client is detected (the kismet sound, @ http://goo.gl/oDi5sR)
-and can be instructed to note familiar devices (favorites) such as machines you own.<br>
+sigmon can also play a sound when a new client is detected (the kismet sound, @ http://goo.gl/oDi5sR)
+and can be instructed to note familiar devices (favorites) such as machines you own or observe regularly.<br>
 
 The code is released under the GPL2 license.
 
@@ -44,7 +44,7 @@ You will need a wireless card that is capable of going into <a href=http://en.wi
 
 Required python libraries:
 
-* scapy
+* scapy or pyshark and tshark/wireshark
 * netaddr
 * humanize
 * textwrap
@@ -54,6 +54,9 @@ Required python libraries:
 The testing platform is <b>Kali Linux</b> 1.0.9 running on an i686 kernel version 3.14.<br>
 The tested chipsets were a realtek 8187 and an atheros ar9271.<br>
 
+sigmon will probably work on most modern Linux distributions with python and airodump.
+Has also been used successfully with several onboard (intel, etc) wireless cards.
+
 Usage
 =====
 
@@ -62,7 +65,7 @@ a debug mode, which prints out all info; and a tail mode,
 which will print probes in csv format.
 
 Edit the sigmon.cfg and choose your options. Running sigmon.py will begin
-listening for probes. airmon-ng must be run prior to create the monitor
+listening for probes. airmon-ng must be run <b>prior</b> to create the monitor
 interface from the wireless interface. <br>
 
 In-program help is available by striking the 'h' key.
@@ -86,12 +89,14 @@ sigmon.py [options] [interface],...
           listen for wireless probe requests
            -h          show this help
       
+           -p          mock curses display (default)
            -f          add a mac to favorite list (--fav [mac])
            -d          print debug to stdout, more for more info (--debug)
            -t          tailable (CSV) output (--tail)
+           -P          disable saving of pickle file
            -q          quiet output (--quiet)
       
-      version 0.9h
+      version 0.9i
 </pre>
 
 Examples
@@ -118,7 +123,7 @@ Examples
 
                                      Loud Clients:
 
-1  *78:ca:39:3f:b6:c8  (Apple / rocketbu          )	-80	1      174     
+1  *78:ca:39:xx:xx:xx  (Apple / rocketbu          )	-80	1      174     
         McDonalds Free Wifi, Full O Beans, VCLibrary, Marriot
 
 
@@ -131,22 +136,30 @@ Caveats
 =======
 
 Can cause your cat to do weird things<br> 
+Newer wireless devices send out fake probes, and restrict broadcasting their entire preferred client list<br>
+
+ANECDOTES
+=========
+
+So some of the things I have seen while watching the output of this program include phone numbers, birthdates, and even a social security number..<br>
 
 BUGS
 ====
 
-Scapy regularly delivers malformed packets
+Scapy regularly delivers malformed packets, and tshark occasionally crashes - which maay cause a loop.<br>
+
+Quitting prematurely can corrupt the pickle file.
 
 TODO
 ====
 
-Reimpliment a database/sqlachemy<br>
+Reimpliment a database/sqlachemy/mongodb<br>
 Add real curses display :D<br>
 
 Contact
 =======
 
-CB Terry - terry.chad@gmail.com / http://github.com/terbo
+CB Terry - http://github.com/terbo<br>
 
 See Also
 ========
