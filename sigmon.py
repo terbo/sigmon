@@ -90,7 +90,7 @@ import subprocess
 from select import select
 from threading import current_thread
 
-from ansi.cursor import up, down
+from ansi.cursor import up, down, forward
 from ansi.colour.fx import reset
 from colors import bold as b, underline as ul, italic as i, negative as neg
 
@@ -192,7 +192,7 @@ class CONF:
     #self.soundplayeropts = ''
     self.soundnew = ''
     
-    self.prompt = '\r> '
+    self.prompt = '>'
     
     self.getopts = 'Ppqhdtf:'
     self.getoptslong = ['help', 'quiet', 'debug', 'fav=', 'tail', 'print','nopickles']
@@ -258,13 +258,15 @@ def show(out):
 
 # non-blocking, non-portable getchar
 def getchar(prompt=True):
-  if prompt: print conf.prompt,
-  
   fd = sys.stdin.fileno()
   old_settings = termios.tcgetattr(fd)
+  ch=''
   try:
     tty.setraw(sys.stdin.fileno())
-    ch=sys.stdin.read(1)
+    if prompt: print conf.prompt, up(1)
+    [i, o, e] = select([sys.stdin.fileno()], [], [], conf.screen_refresh)
+    if i: ch=sys.stdin.read(1)
+    else: ch=''
   finally:
     termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
   return ch
@@ -516,6 +518,9 @@ def check_input(sig,sc):
   
   inp = getchar()
   
+  if not len(inp):
+    return
+  
   if inp == 'h':
     print conf.help_keys
     waitkey()
@@ -587,12 +592,13 @@ def check_input(sig,sc):
   #elif inp == '':
   # from IPython import embed; embed() 
   
-  #elif inp == 'E':
-  #  code = raw_input('Code to exec:')
-  #  try:
-  #    exec(code) in globals()
-  #  except Exception as inst:
-  #    print 'Error in code: %s - %s' % ( code, inst)
+  elif inp == 'E':
+    code = raw_input('Code to exec:')
+    try:
+      exec(code) in globals()
+    except Exception as inst:
+      pass
+      #print 'Error in code: %s - %s' % ( code, inst)
     
     waitkey() 
   
@@ -1021,14 +1027,15 @@ def main(argv):
         show_print(1,2)
     except Exception as inst:
       # this displays very vague errors ...
-      print 'ERROR in main show_print: %s' % inst
-      waitkey()
+      pass
+      #print 'ERROR in main show_print: %s' % inst
+      #waitkey()
     try:
         check_input(1,2)
     except Exception as inst:
-      print 'ERROR in main check_input: %s' % inst
-      waitkey()
-
+      pass
+      #print 'ERROR in main check_input: %s' % inst
+      #waitkey()
 
   # bye lates
   sig_shutdown()
