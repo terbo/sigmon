@@ -222,7 +222,6 @@ class CONF:
       /           highlight search
       T           show running threads
       A           add an interface
-      D           set debug level
 ''' 
       #o           set options?
 
@@ -479,7 +478,7 @@ def sigint(s, f):
   check_input(1,2)
 
 def waitkey():
-  print '\nPress any key to continue: ',
+  print '\nPress any key to continue: '
   print getchar(prompt=0)
 
 def show_stats():
@@ -553,23 +552,14 @@ def check_input(sig,sc):
     conf.fulldisplay = False if conf.fulldisplay == True else True
     
   elif inp == '\\':
-    halfhr = 60 * 60 / 2
-    sixhr = halfhr * 12
-    halfdy = sixhr * 2
-    day = halfdy
-
     print 'Enter MAC/SSID Address to search for:',
     search = raw_input()
     try:
-      if re.search('[a-zA-Z0-0][-:][a-zA-Z0-9]',search):
+      if re.search('[a-zA-Z0-9][-:][a-zA-Z0-9][-:][a-zA-Z0-9]',search):
         (cl, ss, st, si) = conf.c[search].pr(full=True)
         
         print cl
         print ss if ss else ''
-        #print st if st else ''
-        #print si if si else ''
-        #seen_total = float(st[0]) - float(st[-1])
-        #if(seen_total < halfhr):
       else:
         clients = conf.c
         print ''
@@ -591,13 +581,14 @@ def check_input(sig,sc):
   
   #elif inp == '':
   # from IPython import embed; embed() 
+  # from ptpython.repl import embed; embed(globals(),locals())
   
-  elif inp == 'E':
-    code = raw_input('Code to exec:')
-    try:
-      exec(code) in globals()
-    except Exception as inst:
-      pass
+  #elif inp == 'E':
+  #  code = raw_input('Code to exec:')
+  #  try:
+  #    exec(code) in globals()
+  #  except Exception as inst:
+  #    pass
       #print 'Error in code: %s - %s' % ( code, inst)
     
     waitkey() 
@@ -606,11 +597,7 @@ def check_input(sig,sc):
     sig_shutdown()
   
   elif inp == 's':
-    print '[l] last seen [f] firstseen [p] probes',
-    print '[P] probes desc [t] signal [T] signal desc',
-    print '[v] vendor [V] vendor desc:  ',
-    
-    inp = getchar(prompt=0)
+    inp = raw_input('[l] last seen [f] firstseen [p] probes [P] probes desc [t] signal [T] signal desc [v] vendor [V] vendor desc:') 
     
     if inp == 'l':
       conf.defaultsort = 'last seen'
@@ -701,8 +688,7 @@ def check_input(sig,sc):
     waitkey()
   
   elif inp == 'A':
-    print 'Enter monitor interface: ',
-    inp = getchar(prompt=0)
+    inp = raw_input('Enter monitor interface: ')
     inp = int(inp)
     if inp not in range(0,99):
       print 'Enter a numeric interface. : ', inp
@@ -719,30 +705,30 @@ def check_input(sig,sc):
     finally:
       conf.interfaces.add(iface)
   
-  elif inp == 'D':
-    print '[0] off [1] verbose [2] debug [3] trace - Enter debug level: ',
-    inp = getchar(prompt=0)
-
-    if inp == 0:
-      try:
-        conf.opts.remove('trace')
-        conf.opts.remove('verbose')
-        conf.opts.remove('debug')
-      except Exception as inst:
-        pass
-    elif inp == 1:
-      conf.opts.add('debug')
-    elif inp == 2:
-      conf.opts.add('debug')
-      conf.opts.add('verbose')
-    elif inp == 3:
-      conf.opts.add('debug')
-      conf.opts.add('verbose')
-      conf.opts.add('trace')
-    else:
-      print 'Invalid selection: ', inp
-      waitkey()
-    return
+  #elif inp == 'D':
+  #  print '[0] off [1] verbose [2] debug [3] trace - Enter debug level: ',
+  #  inp = getchar(prompt=0)
+#
+#    if inp == 0:
+#      try:
+#        conf.opts.remove('trace')
+#        conf.opts.remove('verbose')
+#        conf.opts.remove('debug')
+#      except Exception as inst:
+#        pass
+#    elif inp == 1:
+#      conf.opts.add('debug')
+#    elif inp == 2:
+#      conf.opts.add('debug')
+#      conf.opts.add('verbose')
+#    elif inp == 3:
+#      conf.opts.add('debug')
+#      conf.opts.add('verbose')
+#      conf.opts.add('trace')
+#    else:
+#      print 'Invalid selection: ', inp
+#      waitkey()
+#    return
   
 def loadconf(picklefile = False):
   global conf # why do I have to use this? seperate thread?
