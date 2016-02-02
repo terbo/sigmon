@@ -1,11 +1,14 @@
 #!/usr/bin/python
+''' usage: $0 [mac address] [...] - resolve mac address vendors '''
 
 import sys
 from netaddr import *
 
-inp = sys.argv[1]
-mac = EUI(inp)
-oui = mac.oui
-vendor = oui.registration().org
+if len(sys.argv) < 2:
+  print __doc__
+  sys.exit(-1)
 
-print str(mac) + ' ' + vendor
+for mac in sys.argv[1:]:
+  try: vendor = EUI(mac).oui.registration().org
+  except: vendor = 'Unknown'
+  print '"%s","%s"' % (mac, vendor)
