@@ -41,22 +41,43 @@ db.system.js.save({
   }
 })
 db.system.js.save({
-  _id: 'lookup', value: function(q) {
-  if ( /:[A-Za-z0-9][A-Za-z0-9]:/.test(q) ) { // client mac
+  _id: 'lookup', value: function(q, i) {
+  if ( /([A-Za-z0-9][A-Za-z0-9]:){3}/.test(q) ) { // client mac
+    if( typeof i == 'undefined') { i = 15 } // minutes
+    print(q,'\t',mac(q).next()['count'],'probes','\t"', ssids(q).next()['ssids'].sort().join('","')+'"')
     var last = session = start = db.clients.aggregate({$match: { mac: q }},{$sort: { time: -1 }}, {$limit: 1}).next()['time']
-    for( ok=0; ok < 10; ok ++) {
-      session = new Date(session - minute * 10)
-      last = db.clients.aggregate({$match: { mac: q, time: { $lt: start, $gt: session }  }})
-      try { last = last.next()['time'] }
-      catch(err) { break }
+    for( ok=1; ; ok ++) {
+      session = new Date(session - minute * i)
+      try { last = db.clients.aggregate({ $match: { mac: q, time: { $lt: last, $gt: session }  }}).next()['time']}
+      catch(e) { break }
     }
-    print('mac:',q, 'enter:', last, 'exit:', start) 
-    //#return db.clients.aggregate({$match: { mac: q, time: { $lt: lastseen } } })
+    print('\tenter:', last.toLocaleString(),
+          '\texit:', start.toLocaleString(),
+          '\tsessions:', ok,
+          '\length:', parseInt((start - last) / 1000 / 60), 'minutes' ) 
   }
-  else if ( q == /-/) { }
-  else { return db.clients.aggregate( { $match: {ssid: q } }, { $group: { _id: '$mac' , count: { $sum: 1} } }) }
-  // return periods: seen in five minutes, until not seen, plus, time seen = session
-  // re : mac - date else ssid
+  else if ( q == /-/) { /* date */ }
+  else { return db.clients.aggregate( { $match: {ssid: q } }, { $group: { _id: '$mac' , count: { $sum: 1} } }, { $sort: { count: -1 } }) }
+  }
+})
+db.system.js.save({
+  _id: 'ssids', value: function(q) {
+    return db.clients.aggregate(
+      { $match: { mac: q } },
+      { $group: { _id: '$mac', ssids: { $addToSet: "$ssid"} } })
+  }
+})
+db.system.js.save({
+  _id: 'mac', value: function(q) {
+    return db.clients.aggregate(
+      { $match: { mac: q } },
+      { $group: { _id: '$mac', count: { $sum: 1 } }})
+  }
+})
+db.system.js.save({
+  _id: 'ss', value: function(q,i) {
+    if( typeof q == 'undefined') { q = 5 } // minutes
+    last(q)['client'].forEach(function(doc){lookup(doc,i) })
   }
 })
 db.system.js.save({
@@ -66,8 +87,8 @@ db.system.js.save({
 })
 
 db.system.js.save({
-  _id: 'reload', value: function() {
-    print(load('/root/code/sigmon/tools/mongo.js'))
+  _id: 're', value: function() {
+    print(load('mongo.js'))
   }
 })
 //db.system.js.save({
