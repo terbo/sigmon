@@ -52,7 +52,7 @@ Required python libraries:
 * ansicolors
 
 You can simply do "pip install -r requirements.txt --upgrade" to fetch the python modules.
-(terminaltables requires lxml, beware, and pyshark requires an updated gevent and trollius)
+(pyshark requires an updated lxml, gevent and trollius)
 
 The testing platform is <b>Kali Linux</b> 1.0.9 running on an i686 kernel version 3.14.<br>
 The tested chipsets were a realtek 8187 and an atheros ar9271.<br>
@@ -169,10 +169,11 @@ Sigmon Wiki - https://github.com/terbo/sigmon/wiki<br>
 Projects with a grander scope:<br>
 <br>
 Snoopy - http://github.com/sensepost/snoopy-ng and https://github.com/sensepost/snoopy<br>
-Probr - http://probr.ch/
+Probr - http://probr.ch/<br>
 WiWo - https://n0where.net/802-11-massive-monitoring-wiwo/<br>
 CreepyDOL - http://blog.ussjoin.com/2013/08/creepydol.html and https://github.com/ussjoin<br>
-Videos:
+
+<br>Videos:
 
 http://www.youtube.com/watch?v=GvrB6S_O0BE - The Machines That Betrayed Their Masters by Glenn Wilkinson_<br>
 http://www.youtube.com/watch?v=ubjuWqUE9wQ - DEFCON 21 - Stalking a City for Fun and Frivolity<br>
