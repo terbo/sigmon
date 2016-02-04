@@ -1,4 +1,4 @@
-sigmon 0.9i
+sigmon 0.9i - Prototype
 ======
 
 Display/Record wireless probes like airodump-ng with scapy/wireshark<br>
@@ -9,6 +9,8 @@ The output is similar to that of airodump-ng from the aircrack-ng suit.<br>
 sigmon can also play a sound when a new client is detected (the kismet sound, @ http://goo.gl/oDi5sR)
 and can be instructed to note familiar devices (favorites) such as machines you own or observe regularly.<br>
 
+TL;DR: The 802.11 Wireless networking stack is fairly insecure.
+
 The code is released under the GPL2 license.
 
 What it does
@@ -16,17 +18,16 @@ What it does
 
 Nowadays radio waves are crowded with signals; indeed, nearly every person has a radio transmitter
 on them; some people have several. These transmitters are personal cellular, wireless, and bluetooth
-devices, and this program focuses on listening to the wireless signals.
+devices, and this program focuses on listening to their wireless signals.
 
 Each time you connect to a wireless network and your device remembers the name, it indefinitally searches
-for it, as long as wireless is turned on. The way it does this is by sending out 'probe' requests that
+for it, as long as your wireless is turned on. The way it does this is by sending out 'probe' requests that
 contain the name of the access point you are looking for, in the form of a service set identifer (<a href=http://en.wikipedia.org/wiki/SSID)>SSID</a>).
-Also contained in this probe is your machine access control (<a href=http://en.wikipedia.org/wiki/MAC_Address>MAC</a>) address, which is completely unique to
-your device.
+Also contained in this probe is your machine access control (<a href=http://en.wikipedia.org/wiki/MAC_Address>MAC</a>) address, which is completely unique to your device.
 
 These probes are sent into the airwaves unencrypted. What this means is that anyone listening for these
 probes can (<b>a</b>) uniquely identify each device and (<b>b</b>) view what networks each device is looking for.
-This program displays that information.
+This program works with that data.
 
 Also included in this information is a relative signal strength, which can be used to determine approximate
 distance from the base station; with more base stations, finer granularity in location can be achieved.
@@ -44,12 +45,14 @@ You will need a wireless card that is capable of going into <a href=http://en.wi
 
 Required python libraries:
 
-* scapy or pyshark and tshark/wireshark
+* pyshark and tshark/wireshark
 * netaddr
 * humanize
-* textwrap
 * ansi
 * ansicolors
+
+You can simply do "pip install -r requirements.txt --upgrade" to fetch the python modules.
+(terminaltables requires lxml, beware, and pyshark requires an updated gevent and trollius)
 
 The testing platform is <b>Kali Linux</b> 1.0.9 running on an i686 kernel version 3.14.<br>
 The tested chipsets were a realtek 8187 and an atheros ar9271.<br>
@@ -60,9 +63,8 @@ Has also been used successfully with several onboard (intel, etc) wireless cards
 Usage
 =====
 
-sigmon has 3 modes: a full screen mode, which is the default;
-a debug mode, which prints out all info; and a tail mode,
-which will print probes in csv format.
+sigmon has (2) modes: a full screen mode, which is the default;
+and a tail mode, which will print probes in csv format.
 
 Edit the sigmon.cfg and choose your options. Running sigmon.py will begin
 listening for probes. airmon-ng must be run <b>prior</b> to create the monitor
@@ -80,7 +82,6 @@ In-program help is available by striking the 'h' key.
       G           display graphs [soon]
       T           show running threads
       A           add an interface
-      D           set debug level
 </pre>
 
 Command line options:
@@ -98,6 +99,8 @@ sigmon.py [options] [interface],...
       
       version 0.9i
 </pre>
+
+The program will automatically save the configuration and seen clients to .sigmon.p every 5 minutes.
 
 Examples
 ========
@@ -141,20 +144,17 @@ Newer wireless devices send out fake probes, and restrict broadcasting their ent
 ANECDOTES
 =========
 
-So some of the things I have seen while watching the output of this program include phone numbers, birthdates, and even a social security number..<br>
+So some of the things I have seen while watching the output of this program include phone numbers, birthdates, and even a social security number and an obvious password..<br>
 
 BUGS
 ====
 
-Scapy regularly delivers malformed packets, and tshark occasionally crashes - which maay cause a loop.<br>
-
-Quitting prematurely can corrupt the pickle file.
+Innumerable
 
 TODO
 ====
 
-Reimpliment a database/sqlachemy/mongodb<br>
-Add real curses display :D<br>
+Total Rewrite
 
 Contact
 =======
@@ -164,11 +164,14 @@ CB Terry - http://github.com/terbo<br>
 See Also
 ========
 
+Sigmon Wiki - https://github.com/terbo/sigmon/wiki<br>
+<br>
 Projects with a grander scope:<br>
 <br>
 Snoopy - http://github.com/sensepost/snoopy-ng and https://github.com/sensepost/snoopy<br>
+Probr - http://probr.ch/
+WiWo - https://n0where.net/802-11-massive-monitoring-wiwo/<br>
 CreepyDOL - http://blog.ussjoin.com/2013/08/creepydol.html and https://github.com/ussjoin<br>
-
 Videos:
 
 http://www.youtube.com/watch?v=GvrB6S_O0BE - The Machines That Betrayed Their Masters by Glenn Wilkinson_<br>
