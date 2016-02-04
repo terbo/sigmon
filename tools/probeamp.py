@@ -7,9 +7,11 @@
 # and SSID's it sees, and when triggered, will make it look like every
 # client is searching for every SSID ...
 #
-# I haven't seen any ill effects on local traffic, but my monitoring
-# program seems to be filled up fairly quickly. =D
+# --I haven't seen any ill effects on local traffic, but my monitoring
+# program seems to be filled up fairly quickly. =D--
 #
+# This actually prohibits local traffic after a short period - a DOS.
+
 
 from scapy.all import *
 import os, sys
