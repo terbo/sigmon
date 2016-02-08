@@ -32,7 +32,7 @@ db.system.js.save( {
   }
 })
 db.system.js.save( {
-  _id: 'localtime', value: function(ob) {
+  _id: 'localtime', value: function(obj) {
     if( typeof obj == 'undefined') { return new Date(0).toLocaleString() }
     return obj.toLocaleString() // test with hasProperty?
   }
