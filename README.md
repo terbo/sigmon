@@ -1,184 +1,124 @@
-sigmon 0.9i - Prototype
-======
+Originally Sigmon was designed to run from one computer, possibly with multiple wifi cards as input, and record as much as it could and do some analysis.
 
-Display/Record wireless probes like airodump-ng with scapy/wireshark<br>
+I am pleased to be soon releasing a new design which allows for multiple remote sensors to collaborate by various methods with a server, which can be separated from a HTTP &amp; REST server providing the interface to the large amount of collected data.
 
-sigmon, or Signal Monitor, displays probe requests from wireless clients in range.<br>
-The output is similar to that of airodump-ng from the aircrack-ng suit.<br>
+I am currently exploring the many options as to how this system can be put together, what it can be used for, and how to best expose others to it.
 
-sigmon can also play a sound when a new client is detected (the kismet sound, @ http://goo.gl/oDi5sR)
-and can be instructed to note familiar devices (favorites) such as machines you own or observe regularly.<br>
+The current setup:
 
-TL;DR: The 802.11 Wireless networking stack is fairly insecure.
+**Sensors**
 
-The code is released under the GPL2 license.
+*Hardware*:
 
-What it does
-============
+    TP-Link Travel Routers (MR3020/3040)
+    OpenWRT (Chaos Calmer) with 16GB USB Root
+    TP-Link N USB with 7dBi ALFA Antenna
+    
 
-Nowadays radio waves are crowded with signals; indeed, nearly every person has a radio transmitter
-on them; some people have several. These transmitters are personal cellular, wireless, and bluetooth
-devices, and this program focuses on listening to their wireless signals.
+Also used are two linux laptops with ALFA Silver & Black adapters,
+And 9dBi dipole and Cantenna antennas, respectively. The latter
+sees the most probes, but needs some consideration to work in the
+OpenWRT power constraints.
 
-Each time you connect to a wireless network and your device remembers the name, it indefinitally searches
-for it, as long as your wireless is turned on. The way it does this is by sending out 'probe' requests that
-contain the name of the access point you are looking for, in the form of a service set identifer (<a href=http://en.wikipedia.org/wiki/SSID)>SSID</a>).
-Also contained in this probe is your machine access control (<a href=http://en.wikipedia.org/wiki/MAC_Address>MAC</a>) address, which is completely unique to your device.
+*Client*:
 
-These probes are sent into the airwaves unencrypted. What this means is that anyone listening for these
-probes can (<b>a</b>) uniquely identify each device and (<b>b</b>) view what networks each device is looking for.
-This program works with that data.
+    Python script (~100 lines)
+    Required Modules: Pcapy, Impacket, pid
+    Also uses JSON & URLLib2
 
-Also included in this information is a relative signal strength, which can be used to determine approximate
-distance from the base station; with more base stations, finer granularity in location can be achieved.
+Client software is run on boot. A bash script sets monitoring mode.
+A pcap capture loop is setup and redirected by HTTP JSON POST
+to the REST server, a small script written in Eve.
 
-While some percentage of people have smart phones, a smaller number have wireless always enabled.
-Even so, the number of results this program shows can be used to form a demographic map.
+The rest.py module uses Eve, and then validates the input,
+submitting it to the MongoDB server.
 
-Other uses for this data can be discovered; at the end of this file videos are linked that include some
-of the wide ranging security implications.
+**Database**:
+*Hardware*:
 
-The Requirements
-============
+    Intel Q720 laptop, 8x CPU with 4GB RAM
+(Few years old, but fairly fast)
 
-You will need a wireless card that is capable of going into <a href=http://en.wikipedia.org/wiki/Monitor_mode>monitor mode</a>, and is compatible with <a href=http://www.aircrack-ng.org/>aircrack</a>.<br>
+*Software*:
 
-Required python libraries:
+    MongoDB 3.2.1
+    Debian Linux 8.3
+    Python 2.7.9
+    
+*Sigmon module*:
 
-* pyshark and tshark/wireshark
-* netaddr
-* humanize
-* ansi
-* ansicolors
+*Required modules*: PyMongo, PyTZ, netaddr, humanize
 
-You can simply do "pip install -r requirements.txt --upgrade" to fetch the python modules.
-(pyshark requires an updated lxml, gevent and trollius)
+sigmon.py does most of the work, ~800 lines of code to be rewritten
 
-The testing platform is <b>Kali Linux</b> 1.0.9 running on an i686 kernel version 3.14.<br>
-The tested chipsets were a realtek 8187 and an atheros ar9271.<br>
+**Web Interface**:
+    Required modules: Flask, Flask-Bootstrap
 
-sigmon will probably work on most modern Linux distributions with python and airodump.
-Has also been used successfully with several onboard (intel, etc) wireless cards.
-
-Usage
-=====
-
-sigmon has (2) modes: a full screen mode, which is the default;
-and a tail mode, which will print probes in csv format.
-
-Edit the sigmon.cfg and choose your options. Running sigmon.py will begin
-listening for probes. airmon-ng must be run <b>prior</b> to create the monitor
-interface from the wireless interface. <br>
-
-In-program help is available by striking the 'h' key.
-<pre>
-      space       display status
-      s           choose sort method
-      a           show access point list
-      c           show client list
-      f           filter clients
-      \           search for mac or ssid
-      /           highlight search
-      G           display graphs [soon]
-      T           show running threads
-      A           add an interface
-</pre>
-
-Command line options:
-<pre>
-sigmon.py [options] [interface],...
-          listen for wireless probe requests
-           -h          show this help
-      
-           -p          mock curses display (default)
-           -f          add a mac to favorite list (--fav [mac])
-           -d          print debug to stdout, more for more info (--debug)
-           -t          tailable (CSV) output (--tail)
-           -P          disable saving of pickle file
-           -q          quiet output (--quiet)
-      
-      version 0.9i
-</pre>
-
-The program will automatically save the configuration and seen clients to .sigmon.p every 5 minutes.
-
-Examples
-========
-<pre>
-  [ Started: 3 minutes ago ][ Mon Oct 27 21:42:22 2014 ][ 8 Clients ][ 8 SSIDs ][ 4 Vendors ][ sorted by vendor
-
-	STATION						Signal	#Lost	#Probes	SSIDs
-                                    Close Clients:
-
-2  *5c:f9:38:xx:xx:xx (Apple, Inc / iPad         )	-42	0      76      [ANY]
-
-                                   Farther Clients:
-
-2   48:d7:05:xx:xx:xx  (Apple                     )	-86	2      98      netgear
-2   b0:9f:ba:xx:xx:xx  (Apple                     )	-91	0      15      linksys
-1   2c:41:38:xx:xx:xx  (Hewlett-Packard Company   )	-76	0      71      [ANY], default
-0   cc:9e:00:xx:xx:xx  (Nintendo Co., Ltd.        )	-78	0      6       dlink
-
-                                Recently Seen Clients:
-
-1   44:4c:0c:xx:xx:xx  (Apple                     )	-73	0      12      [ANY]
-1   4c:82:cf:xx:xx:xx  (Echostar Technologies     )	-72	0      1       [ANY]
-
-                                     Loud Clients:
-
-1  *78:ca:39:xx:xx:xx  (Apple / rocketbu          )	-80	1      174     
-        McDonalds Free Wifi, Full O Beans, VCLibrary, Marriot
+The views.py module is responsible for displaying the data.
+It offers several JSON API endpoints, which may be moved into
+the rest.py module, and provide various queries, data for graphing,
+and ultimately the overview.html
 
 
-  sigmon 0.9h on mon0,mon1,mon2             2,026/80,852/4,072 probes/pkts/dropped                        [h]elp  [q]uit
+Most of the past month has been spent on the above.
 
-> 
-</pre>
+Prospectively, I am looking at various ways to display and visualize the copious amounts of data being collected.
 
-Caveats
-=======
+    5 Minutes 4  sensors  655 probes  55 macs 11 vendors  18 ssids
+    overall probes: 1,304,330 devices: 17,002 sessions: 462 vendors: 121 ssids: 2,589
 
-Can cause your cat to do weird things<br> 
-Newer wireless devices send out fake probes, and restrict broadcasting their entire preferred client list<br>
 
-ANECDOTES
-=========
+     pp(probes_per_sensor(start=_now(UTC)-_hours(24),stop=24))
+    [{u'_id': u'sensor1',
+      u'avgrssi': -74.6542219397887,
+      u'maxrssi': -94,
+      u'minrssi': -29,
+      u'probes': 12589},
+     {u'_id': u'sensorb',
+      u'avgrssi': -79.85067155401154,
+      u'maxrssi': -98,
+      u'minrssi': -2,
+      u'probes': 36557},
+     {u'_id': u'sensorj',
+      u'avgrssi': -55.40700218818381,
+      u'maxrssi': -74,
+      u'minrssi': -7,
+      u'probes': 18280},
+     {u'_id': u'sensorz',
+      u'avgrssi': -79.60670731707317,
+      u'maxrssi': -97,
+      u'minrssi': -27,
+      u'probes': 51168}]
 
-So some of the things I have seen while watching the output of this program include phone numbers, birthdates, and even a social security number and an obvious password..<br>
 
-BUGS
-====
+Thats on a monday. Weighting and long/lat are used to equalize this information with session entry/exit over time, possibly to be fed into a markov simulator fed to a neural net... oh my.
 
-Innumerable
 
-TODO
-====
+**Queries available**
 
-Total Rewrite
+Loading the main page, overview.html, displays:
+    Selected time period/Overall collection statistics
+    Daily/Hourly graphs of traffic, sessions, unique devices/unknown ouis, and SSID's probed for
 
-Contact
-=======
+Sortable table showing probe data for the selected period by MAC address, which is filterable in several ways:
+    Frequency of appearance, vendor, proximity (RSSI), time, as well as overall data collected
 
-CB Terry - http://github.com/terbo<br>
 
-See Also
-========
+**Essentially, with a few of my custom filters, I can take a list of 1000 unique devices and filter it down to 5 in a few clicks.**
 
-Sigmon Wiki - https://github.com/terbo/sigmon/wiki<br>
-<br>
-Projects with a grander scope:<br>
-<br>
-Snoopy - http://github.com/sensepost/snoopy-ng and https://github.com/sensepost/snoopy<br>
-Probr - http://probr.ch/<br>
-WiWo - https://n0where.net/802-11-massive-monitoring-wiwo/<br>
-CreepyDOL - http://blog.ussjoin.com/2013/08/creepydol.html and https://github.com/ussjoin<br>
 
-<br>Videos:
+Bootstrap is currently used for the interface, as well as [D3](https://github.com/d3/d3/wiki/Gallery) and LeafletJS, but I am looking into a more visual interface (and also mobile friendly) designed after some of these sites:
 
-http://www.youtube.com/watch?v=GvrB6S_O0BE - The Machines That Betrayed Their Masters by Glenn Wilkinson_<br>
-http://www.youtube.com/watch?v=ubjuWqUE9wQ - DEFCON 21 - Stalking a City for Fun and Frivolity<br>
-http://www.youtube.com/watch?v=NjuhdKUH6U4 - DEFCON 20 - Can You Track Me Now? Government And Corporate Surveillance Of Mobile Geo-Location<br>
+* [Matrix Admin](http://themedesigner.in/demo/matrix-admin/index.html)
 
-Future
-======
-[Redacted]
+* [ThreatWiki/Kenya](http://vast-journey-7849.herokuapp.com/kenyavisualization)
+
+* [TaxiTracker](http://chriswhong.com/open-data/taxi-techblog-2-leaflet-d3-and-other-frontend-fun/)
+
+I think a very nifty interface could be made with D3, but I might need some AngularJS to make it work properly. We'll see.
+
+I'll be editing the code and publishing it in the next week, with some screenshots of the POC coming soon.
+
+Oh, and if you want to help or have any questions, feel free, I need to figure out what to call this thing, and also how to explain it to people who have *no* idea what any of the above was about.
+
+Previous version is available @ https://github.com/terbo/sigmon/tree/2.9-prev
