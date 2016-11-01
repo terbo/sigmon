@@ -28,7 +28,7 @@ OpenWRT power constraints.
 
 Client software is run on boot. A bash script sets monitoring mode.
 A pcap capture loop is setup and redirected by HTTP JSON POST
-to the REST server, a small script written in Eve.
+to the REST server. 
 
 The rest.py module uses Eve, and then validates the input,
 submitting it to the MongoDB server.
