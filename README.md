@@ -121,4 +121,41 @@ I'll be editing the code and publishing it in the next week, with some screensho
 
 Oh, and if you want to help or have any questions, feel free, I need to figure out what to call this thing, and also how to explain it to people who have *no* idea what any of the above was about.
 
-Previous version is available @ https://github.com/terbo/sigmon/tree/2.9-prev
+Previous version is available @ [https://github.com/terbo/sigmon/tree/2.9-prev](0.9-prev branch) 
+
+
+
+See Also
+
+
+
+
+Great Overview of network security past to future -
+https://youtu.be/QjnEHbJ_UgM
+
+
+
+
+
+
+
+Sigmon Wiki - https://github.com/terbo/sigmon/wiki
+
+Projects with a grander scope:
+
+Snoopy - http://github.com/sensepost/snoopy-ng and https://github.com/sensepost/snoopy
+Probr - http://probr.ch/
+WiWo - https://n0where.net/802-11-massive-monitoring-wiwo/
+CreepyDOL - http://blog.ussjoin.com/2013/08/creepydol.html and https://github.com/ussjoin
+
+
+
+Videos:
+
+http://www.youtube.com/watch?v=GvrB6S_O0BE - The Machines That Betrayed Their Masters by Glenn Wilkinson_
+http://www.youtube.com/watch?v=ubjuWqUE9wQ - DEFCON 21 - Stalking a City for Fun and Frivolity
+http://www.youtube.com/watch?v=NjuhdKUH6U4 - DEFCON 20 - Can You Track Me Now? Government And Corporate Surveillance Of Mobile Geo-Location
+
+
+
+
