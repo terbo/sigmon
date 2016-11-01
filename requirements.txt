@@ -1,5 +1,0 @@
-humanize
-pyshark
-ansi
-ansicolors
-terminaltables
