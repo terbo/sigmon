@@ -1,6 +1,6 @@
 Originally Sigmon was designed to run from one computer, possibly with multiple wifi cards as input, and record as much as it could and do some analysis.
 
-I am pleased to be soon releasing a new design which allows for multiple remote sensors to collaborate by various methods with a server, which can be separated from a HTTP &amp; REST servers providing the interface to the large amount of collected data.
+I am pleased to be soon releasing a new design which allows for multiple remote sensors to collaborate by various methods with a server, which can be separated from HTTP &amp; REST servers providing the interface to the large amount of collected data.
 
 I am currently exploring the many options as to how this system can be put together, what it can be used for, and how to best expose others to it.
 
