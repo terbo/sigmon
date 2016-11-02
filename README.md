@@ -121,22 +121,14 @@ I'll be editing the code and publishing it in the next week, with some screensho
 
 Oh, and if you want to help or have any questions, feel free, I need to figure out what to call this thing, and also how to explain it to people who have *no* idea what any of the above was about.
 
-Previous version is available @ [https://github.com/terbo/sigmon/tree/2.9-prev](0.9-prev branch) 
-
+Previous version is available @ [0.9-prev branch](https://github.com/terbo/sigmon/tree/2.9-prev) 
 
 
 See Also
 
 
-
-
 Great Overview of network security past to future -
-https://youtu.be/QjnEHbJ_UgM
-
-
-
-
-
+https://youtu.be/QjnEHbJ_UgM - Securing the Internet of Things in the enterprise
 
 
 Sigmon Wiki - https://github.com/terbo/sigmon/wiki
