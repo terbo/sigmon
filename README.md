@@ -16,7 +16,7 @@ The current setup:
     
 
 Also used are two linux laptops with ALFA Silver & Black adapters,
-And 9dBi dipole and Cantenna antennas, respectively. The latter
+And 9dBi monopole and Cantenna antennas, respectively. The latter
 sees the most probes, but needs some consideration to work in the
 OpenWRT power constraints.
 
