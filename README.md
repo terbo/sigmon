@@ -1,4 +1,8 @@
-Sigmon is an idea that Ive entertained for years, which encapsulates my interest in network security, radio networks, large datasets, and now, UI design and data visualization.
+OLD readme - (background info) [0.9-prev](https://github.com/terbo/sigmon/tree/0.9-prev)
+
+Very good academic paper on similar [framework](http://probr.ch/assets/files/probr-paper.pdf)
+
+Sigmon is an idea that Ive entertained for years, which encapsulates my interest in network security, radio networking, large datasets, and now, UI design and data visualization.
 
 Unfortunately I don't know that I should release the current source for several reasons.
 
@@ -8,7 +12,10 @@ Unfortunately I don't know that I should release the current source for several 
 
 With all of that, the core of the system will remain compatible with the current mongodb and previous pickled formats.
 
-Updates forthcoming. 
+So far a MEAN stack has been chosen. UI will either be a combination of gridster/d3 or a generator or some nasa shit.
+
+
+Updates forthcoming.
 
 
 Last update
@@ -136,7 +143,7 @@ I'll be editing the code and publishing it in the next week, with some screensho
 
 Oh, and if you want to help or have any questions, feel free, I need to figure out what to call this thing, and also how to explain it to people who have *no* idea what any of the above was about.
 
-Previous version is available @ [0.9-prev branch](https://github.com/terbo/sigmon/tree/2.9-prev) 
+Previous version is available @ [0.9-prev branch](https://github.com/terbo/sigmon/tree/0.9-prev) 
 
 
 See Also
