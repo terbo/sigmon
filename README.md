@@ -1,3 +1,18 @@
+Sigmon is an idea that Ive entertained for years, which encapsulates my interest in network security, radio networks, large datasets, and now, UI design and data visualization.
+
+Unfortunately I don't know that I should release the current source for several reasons.
+
+ (a) it needs rewritten, to a degree that will change how most of the system functions
+ (b) lots of functionality is still broken/incomplete, especially in the UI, and some time learning wth is needed
+ (c) most of all, besides a few unique functions, the code base is not necessarily welcome to modification, which will be the focus of (a) 
+
+With all of that, the core of the system will remain compatible with the current mongodb and previous pickled formats.
+
+Updates forthcoming. 
+
+
+Last update
+
 Originally Sigmon was designed to run from one computer, possibly with multiple wifi cards as input, and record as much as it could and do some analysis.
 
 I am pleased to be soon releasing a new design which allows for multiple remote sensors to collaborate by various methods with a server, which can be separated from HTTP &amp; REST servers providing the interface to the large amount of collected data.
@@ -136,7 +151,7 @@ Sigmon Wiki - https://github.com/terbo/sigmon/wiki
 Projects with a grander scope:
 
 Snoopy - http://github.com/sensepost/snoopy-ng and https://github.com/sensepost/snoopy
-Probr - http://probr.ch/
+Probr - http://probr.ch/ Especially their paper http://probr.ch/assets/files/probr-paper.pdf
 WiWo - https://n0where.net/802-11-massive-monitoring-wiwo/
 CreepyDOL - http://blog.ussjoin.com/2013/08/creepydol.html and https://github.com/ussjoin
 
