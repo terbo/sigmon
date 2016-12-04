@@ -1,6 +1,6 @@
 OLD readme - (background info) [0.9-prev](https://github.com/terbo/sigmon/tree/0.9-prev)
 
-Very good academic paper on similar [framework](http://probr.ch/assets/files/probr-paper.pdf)
+Very good academic paper on similar framework - [probr](http://probr.ch/assets/files/probr-paper.pdf)
 
 Sigmon is an idea that Ive entertained for years, which encapsulates my interest in network security, radio networking, large datasets, and now, UI design and data visualization.
 
