@@ -1,0 +1,45 @@
+    % extends 'sigmon.html'
+    
+    % block content
+    
+    <!-- graphs !-->
+    
+    % set row1col1
+      % include 'chart/daily.html'
+    % endset
+    
+    % set row2col1
+      % include 'chart/hourly.html'
+    % endset
+    
+    % set row3col1
+      % include 'chart/vendor.html'
+    % endset
+    
+    % set row4col1
+      % include 'chart/eventgraph.html'
+    % endset
+    
+    % include 'gridster/5x3.html' 
+    
+    <!-- //graphs !-->
+    % endblock
+
+    % block styles
+      {{super()}}
+      <link rel='stylesheet' href='/static/css/c3.css' /!-->
+        
+    % endblock
+    
+    % block scripts
+
+      {{super()}}
+
+      <script src='/static/js/d3.min.js'></script>
+      <script src='/static/js/c3.js'></script>
+      <script src='/static/js/timelines-chart.min.js'></script>
+      <script src='/static/js/eventdrops.js'></script>
+
+    % endblock
+
+<!-- vim: set ts=2 sw=2 ai expandtab softtabstop=2 --!>

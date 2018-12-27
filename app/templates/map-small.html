@@ -1,0 +1,29 @@
+    % extends 'sigmon.html'
+   
+    <!-- // map !-->
+    
+    % block styles
+    {{super()}}
+    
+    % include 'map/styles-cdn.html'
+    % endblock
+    
+    % block scripts
+    {{super()}}
+
+    % include 'map/scripts-cdn.html'
+    
+    <script src='https://npmcdn.com/@turf/turf/turf.min.js'></script>
+    <script src='/static/js/perimap-sm.js'></script>
+
+    % endblock
+    
+    % block content
+    
+    % include 'map/perimap-small.html'
+
+    % endblock
+    
+    <!-- // map !-->
+
+<!-- vim: set ts=2 sw=2 ai expandtab softtabstop=2 --!>

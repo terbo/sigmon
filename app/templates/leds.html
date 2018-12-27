@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <script src="/static/js/jquery.js"></script>
+    <script src="/static/js/iro.js" charset="utf-8"></script>
+    <style> body, input { font-size: 2em } </style>
+  </head>
+  <body>
+  <center>
+   Machine: ESP1 <input type='checkbox' checked>
+    2 <input type='checkbox' checked>
+    3 <input type='checkbox' checked>
+  
+    Room: Living <input type='checkbox' checked>
+    Dining <input type='checkbox' checked>
+    Den <input type='checkbox' checked>
+    Porch <input type='checkbox' checked>
+    <div id="demoWheel"></div>
+    </center>
+    <script type="text/javascript">
+      function updateLeds(rgb) {
+        $.post('/api/leds/1', { r: rgb.r, g: rgb.g, b: rgb.b })
+      }
+
+      var demo = new iro.ColorPicker("#demoWheel", {
+        width: $(window).width() - 20,
+        height: $(window).height() - ($(window).height() / 10),
+        markerRadius: 10,
+        //color: "#fff",
+        borderWidth: 6,
+        padding: 8,
+        anticlockwise: true,
+        sliderHeight: $(window).height() / 10,
+        });
+      demo.on('color:change',function(e) { updateLeds(demo.color.rgb) })
+    </script>
+  </body>
+</html>

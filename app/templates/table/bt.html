@@ -1,0 +1,63 @@
+    % block content
+            <!-- probeview !-->
+            
+            <div class='container-fluid'>
+              <div class='row-fluid'>
+                <h3 style='background: #eee'>Bluetooth {{mins}} minutes</h3>
+                <table id='btview' class='table-responsive table-striped
+                                             table-condensed table-hover display
+                                             dbtable nowrap' cellspacing='0'>
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th class='span1' id='mac'>mac/vendor</th>
+                      <th class='span1' id='name'>name</th>
+                      <th class='span2' id='devclass'>class</th>
+                      <th id='lastrssi'>rssi (-/+)</th>
+                      <th class='span2' id='count'>count</th>
+                      <th class='span1' id='lastseen'>lastseen</th>
+                      <th class='span1' id='sensors'>seen by</th>
+                    </tr>
+                  </thead>
+                  <tbody>{% for bts in data.bts -%}
+                    <tr id='{{bts._id}}' data-toggle='popover' title='Device: {{bts._id}}'
+                      data-container='table' data-placement='auto' data-trigger='focus click hover'>
+                      <td class='details-control' id='details-control'></td>
+                      <td class='span1 small'>
+                        <span>
+                          <a href='/lookup/mac/{{ bts._id }}'>{{ bts._id }}</a>: {% if bts.vendor != 'Unknown' -%}
+                            <a href='lookup/vendor/{{ bts.vendor }}'>{{ bts.vendor }}</a>
+                            {% else %} {{ bts.vendor }} {% endif %}
+                        </span>
+                      </td>
+                      <td class='span1'>
+                        {{ bts.name }}
+                      </td>
+                      <td class='span1'>
+                        {{ bts.class }}
+                      </td>
+                      <td data-sort='{{ bts.minrssi }}'>
+                        <span class='small'>{{ bts.lastrssi }} ({{bts.minrssi}},{{bts.maxrssi}})</span>
+                      </td>
+                      <td class='span1'>
+                        {{ bts.count }}
+                      </td>
+                      <td class='span1'>
+                        {{ bts.time }}
+                      </td>
+                      <td class='span1' id='sensors'>
+                        <span class='small' id='sensors'> {% for s in bts.sensors -%}
+                          {% if data.sensors[s] -%}{{ data.sensors[s][0] }} {% else %} {{ s }} {% endif %} {% endfor -%}
+                        </span>
+                      </td>
+                    </tr>{% endfor %}
+                  </tbody>
+                </table>
+              </div> 
+            </div>
+            
+            <!-- //probeview !-->
+    
+    % endblock
+
+<!-- vim: set ts=2 sw=2 ai expandtab softtabstop=2 --!>

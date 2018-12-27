@@ -1,0 +1,58 @@
+    % block content
+            <!-- probeview - how about show which clients connected, or how many, or traffic, etc? !-->
+            
+            <div class='container-fluid'>
+              <div class='row-fluid'>
+                <h3 style='background: #eee'>APs {{mins}} minutes</h3>
+                <table id='apview' class='table-responsive table-striped
+                                             table-condensed table-hover display
+                                             dbtable nowrap' cellspacing='0'>
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th class='span2' id='ssid'>ssid</th>
+                      <th class='span1' id='mac'>mac/vendor</th>
+                      <th id='lastrssi'>rssi (-/+)</th>
+                      <th class='span1' id='lastseen'>lastseen</th>
+                      <th class='span1' id='sensors'>seen by</th>
+                    </tr>
+                  </thead>
+                  <tbody>{% for bcn in data.aps -%}
+                    <tr id='{{bcn._id}}' data-toggle='popover' title='Device: {{bcn._id}}'
+                      data-container='table' data-placement='auto' data-trigger='focus click hover'>
+                      <td class='details-control' id='details-control'></td>
+                      <td class='span1'>
+                        {{ bcn.ssids[0] }}
+                        <span class='small'>
+                          <a href='/lookup/ssid/{{ ssid }}'>{{ ssid }}</a>
+                        </span>
+                      </td>
+                      <td class='span1 small'>
+                        <span>
+                          <a href='/lookup/mac/{{ bcn._id }}'>{{ bcn._id }}</a>: {% if bcn.vendor != 'Unknown' -%}
+                            <a href='/lookup/vendor/{{ bcn.vendor }}'>{{ bcn.vendor }}</a>
+                            {% else %} {{ bcn.vendor }} {% endif %}
+                        </span>
+                      </td>
+                      <td data-sort='{{ bcn.minrssi }}'>
+                        <span class='small'>{{ bcn.lastrssi }} ({{bcn.minrssi}},{{bcn.maxrssi}})</span>
+                      </td>
+                      <td class='span1'>
+                        {{ bcn.time }}
+                      </td>
+                      <td class='span1' id='sensors'>
+                        <span class='small' id='sensors'> {% for s in bcn.sensors -%}
+                          {% if data.sensors[s] -%}{{ data.sensors[s][0] }} {% else %} {{ s }} {% endif %} {% endfor -%}
+                        </span>
+                      </td>
+                    </tr>{% endfor %}
+                  </tbody>
+                </table>
+              </div> 
+            </div>
+            
+            <!-- //probeview !-->
+    
+    % endblock
+
+<!-- vim: set ts=2 sw=2 ai expandtab softtabstop=2 --!>

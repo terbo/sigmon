@@ -1,0 +1,24 @@
+    % extends 'sigmon-cdn.html'
+    
+    % block content
+    
+    <!-- overview !-->
+    
+    <input id=minutes value={{mins}} style='display:hidden'>
+    
+    % set row1col1
+      % include 'tags.html'
+      % include 'table/datatable.html'
+    % endset
+    
+    % include 'gridster/1x1.html' 
+
+    % include 'modal/mac.html'
+    % include 'modal/ssid.html'
+    
+    % include 'footer.html'
+
+    <!-- //overview !-->
+    % endblock
+
+<!-- vim: set ts=2 sw=2 ai expandtab softtabstop=2 --!>

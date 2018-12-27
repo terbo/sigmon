@@ -1,0 +1,26 @@
+/* https://www.gradient-animator.com siq */
+
+body {
+  background: linear-gradient(232deg, #005a9c, #4099a1, #5b75b2);
+  background-size: 600% 600%;
+
+  -webkit-animation: Seegman 10s ease infinite;
+  -moz-animation: Seegman 10s ease infinite;
+  animation: Seegman 10s ease infinite;
+
+  @-webkit-keyframes Seegman {
+      0%{background-position:0% 14%}
+      50%{background-position:100% 87%}
+      100%{background-position:0% 14%}
+  }
+  @-moz-keyframes Seegman {
+      0%{background-position:0% 14%}
+      50%{background-position:100% 87%}
+      100%{background-position:0% 14%}
+  }
+  @keyframes Seegman {
+      0%{background-position:0% 14%}
+      50%{background-position:100% 87%}
+      100%{background-position:0% 14%}
+  }
+}

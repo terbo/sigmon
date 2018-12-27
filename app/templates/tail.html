@@ -1,0 +1,14 @@
+  % extends 'sigmon.html'
+  
+  % block content
+    {{super()}}
+    <table class='datatable' id='datatable'> <thead><th>mac</th><th>sensor</th><th>rssi</th><th>ssid</th><th>time</th></thead></table>
+  % endblock
+
+  % block scripts
+    {{super()}}
+    <script src='/static/js/datatables.min.js'></script>
+    <script>window.onready = tailtable()</script>
+  % endblock
+
+<!-- vim: set ts=2 sw=2 ai expandtab softtabstop=2 --!>

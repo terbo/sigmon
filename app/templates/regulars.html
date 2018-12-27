@@ -1,0 +1,26 @@
+  % extends 'sigmon.html'
+  
+  % block content
+  {{super()}}
+  <table class='datatable' id='datatable'>
+      <thead>
+        <th>mac</th>
+        <th>vendor</th>
+        <th>sensors</th>
+        <th>sessions</th>
+        <th>ssids</th>
+        <th>firstseen</th>
+        <th>lastseen</th>
+        <th>tags</th>
+        <th>alltags</th>
+      </thead>
+    </table>
+  % endblock
+
+  % block scripts
+    {{super()}}
+
+    <script>window.onready = regtable()</script>
+  % endblock
+
+<!-- vim: set ts=2 sw=2 ai expandtab softtabstop=2 --!>

@@ -1,0 +1,31 @@
+    % extends 'sigmon.html'
+    
+    % block content
+    {{super()}}
+    <input id=minutes value={{mins}} style='display:none;position:absolute'>
+    <!-- overview !-->
+    
+    % include 'statsheader.html'
+    
+    % set row1col1
+      % include 'tags.html'
+      % include 'table/datatable.html'
+    % endset
+    
+    % include 'gridster/1x1.html' 
+    
+    % include 'modal/mac.html'
+
+    <!-- //overview !-->
+    
+    % endblock
+    
+    % block scripts
+    {{super()}}	
+    <!--script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/pdfmake.min.js'></script>
+		<script type='text/javascript' src='https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.36/vfs_fonts.js'></script>
+		<script type='text/javascript' src='https://cdn.datatables.net/v/bs/dt-1.10.18/b-1.5.4/b-colvis-1.5.4/b-html5-1.5.4/b-print-1.5.4/cr-1.5.0/kt-2.5.0/r-2.2.2/sl-1.2.6/datatables.min.js'></script--!>
+    <script src='/static/js/datatables.min.js'></script>
+    <script src='/static/js/jquery.gridster.min.js'></script>
+
+    % endblock

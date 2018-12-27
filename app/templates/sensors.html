@@ -1,0 +1,93 @@
+    % extends 'sigmon.html'
+    
+    % block content
+    {{super()}}
+    <div class='container-fluid' id='sensors'>
+      <div id='sensorview' class='form-content' style='display: none; padding-top: 2em; width:30%;max-width: 50%'>
+        
+        <span class='label label-info'>Name</span>&nbsp; <b><span class='sensorinfoname'></span></b><br>
+        <div class='span4' style='background: #e0e0e0'>
+          <button class='btn btn-xs btn-inverse fa fa-terminal' style='background: #777; color: #eee'></button>
+          <span class='text-right'>Online</span>&nbsp; <span class='small sensorconnected'></span>
+          <br>
+          <span class='text-left'>Last Seen</span>&nbsp; <span class='small sensorlastseen'></span> &nbsp;&nbsp;
+          <br>
+          <span class='text-left'>Avg RSSI</span>&nbsp; <span class='small sensorrssi'></span> &nbsp;&nbsp;
+          <span class='text-right'>Probes</span>&nbsp; <span class='small sensorprobes'></span> &nbsp;&nbsp;<br>
+        </div>
+        
+        <div class='sensorinfo'>
+          <span class='label label-info'>IP/Port</span>&nbsp; <span class='sensorinfossh'></span>
+          <span class='label label-info'>Dir.</span><span class='sensororientation'></span> <br>
+          <span class='label label-info'>Description</span><span class='sensorinfodesc'></span> <br>
+          <span class='label label-info'>Serial #</span><span class='sensorinfoserial'></span> <br>
+          <button id='sensoredit' class='btn btn-default btn-xs'>Edit</button> <br>
+        </div>
+        <br>
+        
+        <form id='sensoreditor' name='sensoreditor'
+              action='/api/sensors/edit' method='POST'
+              enctype='multipart/form-data'
+              class='sensoreditor' style='display: none'>
+          <div class='row'>
+            <label for='sensorname' placeholder='hostname'>Name</label>
+            <input type='text' name='name' id='sensorname' class='form-control sensorname'>
+            
+            <label for='sensoraddress' placeholder='0.0.0.0:22'>Address:Port</label>
+            <input type='text' name='ip' id='sensoraddress' class='form-control sensoraddress'>
+            
+            <label for='sensoros'>OS</label>
+            <input type='text' name='os' id='sensoros' class='form-control sensoros'>
+          </div>
+
+          <div class='row'>
+            <label for='sensorbrand'>Brand</label>
+            <input type='text' name='brand' id='sensorbrand' class='form-control sensorbrand'>
+
+            <label for='sensormodel'>Model</label>
+            <input type='text' name='model' id='sensormodel' class='form-control sensormodel'>
+
+            <label for='sensorserial'>Serial #</label>
+            <input type='text' name='serial' id='sensorserial' class='form-control sensorserial'>
+          </div>
+
+          <div class='row'>
+            <div class='span2'>
+              <label for='sensordesc'>Description</label>
+              <input type='text' name='desc' id='sensordesc' class='form-control sensordesc'><br>
+            </div>
+
+            <div class='span2'>
+              <label for='sensorinterfaces' placeholder='wlan1:mon0,wlan2:mon1'>Interface(s):</label>
+              <input type='text' name='iface' id='sensorinterfaces' class='form-control sensorinterfaces'>
+            </div>
+          </div>
+
+          <div class='row'>
+            <label for='sensornotes'>Notes</label>
+            <input type='text' name='notes' id='sensornotes' class='form-control sensornotes'>
+          </div>
+
+          <div class='row'>
+            <label for='sensorlocation'>Location </label> <span class='sensorlocation'></span>
+            <input type='text' name='notes' id='sensorlocation' class='form-control sensorlocation'>
+          </div>
+          
+          <button id='sensorcancelsubmit' type='submit' class='btn btn-default'>Cancel</button>
+          <button id='sensorsubmit' type='submit' class='btn btn-primary'>Update</button>
+        
+        </form>
+      </div>
+    </div>
+
+    % endblock
+
+    % block scripts
+    {{super()}}
+    <script>
+    setTimeout('drawSensors()',2000)
+    </script>
+
+    % endblock
+
+<!-- vim: set ts=2 sw=2 ai expandtab softtabstop=2 --!>

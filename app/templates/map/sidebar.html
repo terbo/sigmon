@@ -1,0 +1,63 @@
+    <div id='sidebar' class='sidebar collapsed'>
+        <!-- Nav tabs -->
+        <div class='sidebar-tabs'>
+            <ul role='tablist'>
+                <li><a href='#home' role='tab'><i class='fa fa-bars'></i></a></li>
+                <li><a href='#setup' role='tab'><i class='fa fa-bank'></i></a></li>
+                <li><a href='#charts' role='tab'><i class='fa fa-area-chart'></i></a></li>
+                <li><a href='#share' role='tab'><i class='fa fa-share-alt'></i></a></li>
+
+                <li style='color: green; border: groove lightgrey; border-radius: .3em 1px' class='disabled'>
+                  <a href='#' role='tab'><i id=zoomlevel>0</i></a></li>
+                <li style='color: green; border: groove lightgrey; border-radius: .3em 1px' class='disabled'>
+                  <a href='#' role='tab'><i id=accuracy>0</i></a></li>
+                <li style='color: green; border: groove lightgrey; border-radius: .3em 1px' class='disabled'>
+                  <a href='#' role='tab'><i id=speed></i>0</a></li>
+            </ul>
+
+            <ul role='tablist'>
+                <li><a href='#help' role='tab'><i class='fa fa-question-circle-o'></i></a></li>
+                <li><a href='#debug' role='tab'><i class='fa fa-bug'></i></a></li>
+            </ul>
+        </div>
+
+        <!-- Tab panes -->
+        <div class='sidebar-content'>
+            <div class='sidebar-pane' id='home'>
+                <h1 class='sidebar-header'>
+                    sidebar-v2
+                    <span class='sidebar-close'><i class='fa fa-caret-left'></i></span>
+                </h1>
+
+                % include 'statsheader.html'
+                % include 'table/aps.html' 
+                % include 'table/probes.html' 
+            </div>
+
+            <div class='sidebar-pane' id='setup'>
+                <h1 class='sidebar-header'>Setup<span class='sidebar-close'><i class='fa fa-caret-left'></i></span></h1>
+                % include 'sensors.html'
+            </div>
+
+            <div class='sidebar-pane' id='charts'>
+                <h1 class='sidebar-header'>Info<span class='sidebar-close'><i class='fa fa-caret-left'></i></span></h1>
+            </div>
+            
+            <div class='sidebar-pane' id='share'>
+                <h1 class='sidebar-header'>Share<span class='sidebar-close'><i class='fa fa-caret-left'></i></span></h1>
+            </div>
+
+            <div class='sidebar-pane' id='help'>
+                <h1 class='sidebar-header'>Help<span class='sidebar-close'><i class='fa fa-caret-left'></i></span></h1>
+            </div>
+
+            <div class='sidebar-pane' id='debug'>
+                <h1 class='sidebar-header'>Debug<span class='sidebar-close'><i class='fa fa-caret-left'></i></span></h1>
+                <h4>Debug:</h4>
+                <div id='consoleDebug' width='80%' height='100%' style='overflow: scroll'></div>
+
+        </div>
+      </div>
+            </div>
+
+<!-- vim: set ts=2 sw=2 ai expandtab softtabstop=2 --!>

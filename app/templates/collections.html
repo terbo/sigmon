@@ -1,0 +1,61 @@
+    % extends 'sigmon.html'
+      
+    % block content
+    
+            <!-- col !-->
+            <div class='container-fluid'>
+              <div class='row'>
+                <h6 class='text-center'>Total space used: {{ size|commify }}  Total collections: {{ cols|length|commify }}</h6>
+                <ul class='list-inline'>
+                  % for key in cols|sort 
+                  % set name = key.name|replace('sigmon.','')
+                  <li>
+                    <a href='/cols/{{name}}'>{{name}}</a>
+                    <span class='badge'> {{key.count|commify}}</span>
+                  </li>
+                  % endfor 
+                </ul>
+              </div>
+              <div class='table-responsive'>
+                
+                <table class='table table-bordered table-striped table-hover' id='dbtable'>
+                  <thead>
+                    <tr>
+                      <th></th>
+                      % for key in fields
+                      <th id='{{key|string}}'> {{key|string}} </th>
+                      % endfor 
+                    </tr>
+                  </thead>
+                  
+                  <tbody>
+                    % for row in col
+                    <tr class='row-fluid'>
+                        <td></td>
+                        % for column in row 
+                        <td> {{ row[column] }} </td>
+                        % endfor  
+                    </tr>
+                    % endfor 
+                  </tbody>
+                </table>
+              </div>
+            
+              <ul class='list-inline'>
+                % for key in cols|sort 
+                % set name = key.name|replace('sigmon.','')
+                <li>
+                    <a href='/cols/{{name}}'>{{name}}</a>
+                    <span class='badge'> {{key.count}} </span>
+                    {{key.size|commify}} MB
+                  </li>
+                % endfor 
+              </ul>
+              <h6 class='text-center'>Total space used: {{ size|commify }}  Total collections: {{ cols|length|commify }}</h6>
+            </div>
+            
+            <!-- //col !-->
+    
+    % endblock
+
+<!-- vim: set ts=2 sw=2 ai expandtab softtabstop=2 --!>

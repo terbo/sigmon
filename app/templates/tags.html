@@ -1,0 +1,19 @@
+    % block content
+      
+            <!-- tags !-->
+            
+              <div class='row-fluid' id='tags'>
+                  <b> Tags:</b>
+                  <div class='btn-group tags' role='button' aria-label='...'>
+                    % for tag in data.tags
+                    <button id='{{ tag }}' type='button'
+                         class='btn btn-xs btn-info'>{{ tag }}</button>
+                  % endfor
+                </div> 
+              </div>
+      
+            <!-- // tags !-->
+
+    % endblock
+
+<!-- vim: set ts=2 sw=2 ai expandtab softtabstop=2 --!>

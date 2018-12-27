@@ -1,0 +1,186 @@
+    % extends 'sigmon.html'
+    
+    % block styles
+    {{super()}}
+      <style>
+			h3 { display: inline }
+      input[type=text] {max-width: 12em }
+			</style>
+			<link rel='stylesheet' href='/static/css/gridstack.css' />
+    % endblock
+    
+    % block content
+    {{super()}}
+    <h3> Owned Devices </h3>
+    <a>Add</a>
+    <a>Search</a>
+    <a>Import</a>
+    <a>Export</a>
+    <br><br>
+    <hr>
+    
+    <div class='grid-stack' id='owndevs'>
+      {% for dev in owndevs %}
+        <div class='grid-stack-item'>
+         <div class='grid-stack-item-content'>
+            {{ owndevs[dev].name }} - <a href='/lookup/mac/{{owndevs[dev].mac}}'>{{ owndevs[dev].mac }}</a>
+            <br>
+            Lastseen: {{ owndevs[dev].lastseen }}<br>
+            Vendor: {{ owndevs[dev].vendor }}<br>
+            {{ owndevs[dev].sessions }} Sessions
+            </span>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    <hr>
+    <h3> Sensors </h3>
+    <a>Add</a>
+    <a>Search</a>
+    <a>Import</a>
+    <a>Export</a> <br>
+	  <br>
+
+    <div class='grid-stack' id='sensors'>
+      {% for sensor in sensors %}
+      <div id='sensorview-{{sensor}}' class='grid-stack-item form-content' style='padding-top: 2em; width:30%;max-width: 50%'>
+       	<div class='grid-stack-item-content'> 
+        <span class='label label-info'>Name</span>&nbsp; <b><span class='sensorinfoname'>{{ sensors[sensor].name }}</span></b><br>
+        <div class='span4' style='background: #e0e0e0'>
+          <button class='btn btn-xs btn-inverse fa fa-terminal' style='background: #777; color: #eee'></button>
+          <span class='text-right'>Online</span>&nbsp; <span class='small sensorconnected'>
+            <i class='fa {% if sensors[sensor].status.connected != False %}fa-check-circle' style='color:green'>
+            {% else %}fa-circle-o' style='color:red'>
+            {% endif %}
+            </i>
+          </span>
+          <br>
+          <span class='text-left'>Last Seen</span>&nbsp; <span class='small sensorlastseen'>{{sensors[sensor].status.lastseen}}</span> 
+          <br>
+          <span class='text-left'>Avg RSSI</span>&nbsp; <span class='small sensorrssi'>{{sensors[sensor].status.avgrssi}} dBm</span> &nbsp;&nbsp;
+          <span class='text-right'>Probes</span>&nbsp; <span class='small sensorprobes'>{{sensors[sensor].status.probes | commify}}</span> &nbsp;&nbsp;<br>
+        </div>
+        
+        <div class='sensorinfo-{{sensor}}'>
+          <span class='label label-info'>IP/Port</span>&nbsp; <span class='sensorinfossh'>{{sensors[sensor].ssh.user}}@{{sensors[sensor].info.ip}}:{{sensors[sensor].ssh.port}}</span>
+          <span class='label label-info'>Dir.</span><span class='sensororientation'>{{sensors[sensor].longlat.orientation}}</span> <br>
+          <span class='label label-info'>Description</span><span class='sensorinfodesc'>{{sensors[sensor].info.desc}}</span> <br>
+          <span class='label label-info'>Serial #</span><span class='sensorinfoserial'>{{sensors[sensor].info.serial}}</span> <br>
+          <button id='edit-{{sensor}}' onclick="$('#sensoreditor-{{sensor}}').toggle()" class='sensoredit btn btn-default btn-xs'>Edit</button> <br>
+        </div>
+        <br>
+        
+        <div class='container'>
+					<form id='sensoreditor-{{sensor}}' name='sensoreditor'
+              action='/api/sensors/edit' method='POST'
+              enctype='multipart/form-data'
+              class='sensoreditor' style='display: none'>
+          <div class='row'>
+            <label for='sensorname' placeholder='hostname'>Name</label>
+            <input type='text' name='name' value='{{sensors[sensor].name}}' id='sensorname' class='form-control sensorname'>
+            
+            <label for='sensoraddress' placeholder='user@1.0.0.0:22'>user@address:port</label>
+            <input type='text' name='ssh' id='sensoraddress'
+              value='{{sensors[sensor].ssh.user}}{{sensors[sensor].info.ip}}:{{sensors[sensor].ssh.port}}'
+              class='form-control sensoraddress'>
+            <input type='text' name='auth' id='sensorauth' value='{{sensors[sensor].ssh.auth}}'>
+            
+            <label for='sensoros'>OS</label>
+            <input type='text' name='os' id='sensoros' class='form-control sensoros' value='{{sensors[sensor].info.os}}'>
+          </div>
+
+          <div class='row'>
+            <label for='sensorbrand'>Brand</label>
+            <input type='text' name='brand' id='sensorbrand' class='form-control sensorbrand'  value='{{sensors[sensor].info.brand}}'>
+
+            <label for='sensormodel'>Model</label>
+            <input type='text' name='model' id='sensormodel' class='form-control sensormodel' value='{{sensors[sensor].info.model}}'>
+
+            <label for='sensorserial'>Serial #</label>
+            <input type='text' name='serial' id='sensorserial' class='form-control sensorserial' value='{{sensors[sensor].info.serial}}'>
+          </div>
+
+          <div class='row'>
+            <div class='span2'>
+              <label for='sensordesc'>Description</label>
+              <input type='text' name='desc' id='sensordesc' class='form-control sensordesc' value='{{sensors[sensor].info.desc}}'><br>
+            </div>
+
+            <div class='span2'>
+              <label for='sensorinterfaces' placeholder='wlan1:mon0,wlan2:mon1'>Interface(s):</label>
+              <input type='text' name='iface' id='sensorinterfaces' class='form-control sensorinterfaces'>
+            </div>
+          </div>
+
+          <div class='row'>
+            <label for='sensornotes'>Notes</label>
+            <input type='text' name='notes' id='sensornotes' class='form-control sensornotes' value='{{sensors[sensor].info.notes}}'>
+          </div>
+
+          <div class='row'>
+            <label for='sensorlocation'>Location </label> <span class='sensorlocation'></span>
+            <input type='text' name='location' id='sensorlocation' class='form-control sensorlocation' value='{{sensors[sensor].location}}'>
+            <input type='text' name='lnglat' id='sensorlongitude' class='form-control sensorlongitude' value='{{sensors[sensor].longlat.coordinates}}'>
+          </div>
+          
+          <button id='sensorcancelsubmit' type='submit' class='btn btn-default'>Cancel</button>
+          <button id='sensorsubmit' type='submit' class='btn btn-primary'>Update</button>
+        
+        </form>
+				</div>
+				</div>
+      </div>
+      {% endfor %}
+    </div>
+
+		% endblock
+
+    % block scripts
+    {{super()}}
+
+    <script src='/static/js/lodash.js'></script>
+    <script src='/static/js/gridstack.js'></script>
+		<script>
+		$(function() {
+			x = 0, y = 0;
+			$('.grid-stack-item').each(function(e,i) {
+				$(i).attr('data-gs-width',4);
+				$(i).attr('data-gs-height',4);
+				$(i).attr('data-gs-x', x);
+				$(i).attr('data-gs-y',y);
+				
+				x += 4;
+				
+				if(x % 3 == 0) {
+					y++;
+					x = 0;
+				}
+			})
+			
+			$('div#owndevs').gridstack({auto: true, resizable: false,
+								cellHeight: 20,
+								verticalMargin: 0, animate: true, })
+      
+      $('.grid-stack').gridstack({auto: true, resizable: false,
+								cellHeight: 50,
+								verticalMargin: 0, animate: true, })
+      
+      $('form.sensoreditor').on('submit',function(e) {
+        e.preventDefault()
+        $.ajax({url: '/api/sensors/edit',
+                type: 'POST',
+                data: this,
+                success: function(e) {
+                  console.log(e)
+                },
+                error: function(e) {
+                console.log(e)
+                }
+        })
+      })
+		})
+    </script>
+
+    % endblock
+<!-- vim: set ts=2 sw=2 ai expandtab softtabstop=2 --!>

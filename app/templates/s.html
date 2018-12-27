@@ -1,0 +1,18 @@
+% extends 'sigmon.html'
+
+% block content
+{{super()}}
+<div id='chart'></div>
+
+% endblock
+
+% block styles
+  {{super()}}
+    <link rel='stylesheet' href='/static/css/c3.css' /!-->
+% endblock
+
+% block scripts
+    <script src='/static/js/d3.min.js'></script>
+    <script src='/static/js/c3.js'></script>
+    <script src='/static/js/2018.js'></script>
+% endblock

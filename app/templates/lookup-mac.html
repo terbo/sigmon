@@ -1,0 +1,183 @@
+    % extends 'sigmon.html'
+    
+    % block styles
+      {{super()}}
+      <style>
+        form#ownedform { opacity: 0.2; font-size: .5em }
+      </style>
+    % endblock
+    
+    % block content
+    <div id='probechart'></div>
+		
+		<table class='devinfo' id='{{mac}}'>
+			<tr>
+				<td align='center' colspan=3>
+					<b> Device {{ mac }} </b> {{ info.vendor }}
+          
+          <form id='ownedform'>
+            Owned: <input type='checkbox' id='owned'>
+                   <input type='text' id='name' length=8>
+                   <input type='submit' value='Ok'>
+          </form>
+				</td>
+				</tr>
+        <tr>
+          <td> Total Probes: {{ totalprobes|commify }} </td>
+            <td>
+              SSIDs
+            </td>
+            <td> {% for ssid in info.ssids -%}
+              <a href='/lookup/ssid/{{ssid}}'>{{ ssid }}</a>
+                 {% endfor %}
+            </td>
+          <tr><td> First Seen: {{ info.firstseen }} </td>
+            <td> Seen By </td> <td>
+              {% for sensor in info.sensors -%}
+              <b>{{ sensor }}</b>
+              {% endfor %}
+            </td>
+          </tr>
+          <tr><td> Last Seen: {{ info.lastseen }} </td></tr>
+			<tr>
+			</td>
+     </tr>
+     <tr>
+				<td>
+					Tags:
+				</td>
+				<td colspan=3>
+					{% for tag in info.alltags -%}
+						<b>{{ tag }}</b>
+					{% endfor %}
+				</td>	
+			</tr>
+		</table>	
+		</table>
+	  <table id='sessions' table-responsive table-striped
+											  table-condensed table-hover display
+                       dbtable nowrap cellspacing='0'>
+			<thead>
+				<th> Enter </th>
+				<th> Exit </th>
+				<th> Duration </th>
+			</thead>
+			</table>
+    % endblock
+
+    % block scripts
+		{{super()}}
+
+    <script src='/static/js/datatables.min.js'></script>
+    <script src='/static/js/timelines-chart.min.js'></script>
+    <script>
+			// need to load owndevs and see if this is one
+      $(function() {
+      mac = $('table.devinfo').prop('id')
+      
+      checkowned = function() {
+        if(S.hasOwnProperty('owndevs') && mac in S.owndevs) {
+          $('#ownedform #owned').click()
+          $('#ownedform #name').val(S.owndevs[mac].name)
+          $('#ownedform').css('opacity',1.0)
+        }
+      }
+
+      setTimeout(checkowned, 1500)
+      
+      $('#ownedform').on('submit',function(e,i) {
+        e.preventDefault()
+        
+        query = '/api/owndevs'
+        data = {}
+
+        if(this[1].value != '')
+          data = this[1].value
+        
+        if(this[0].value == 'on') {
+          mac = $('table.devinfo').prop('id')
+          query += '/' + mac
+          console.log(mac)
+          console.log(query)
+          console.log(data)
+          getOwn(mac, data)
+        }
+      })
+
+
+
+
+      var data = []
+	 	  var sessions = []
+			var probes = []
+
+		  data = [
+				{
+					group: "probes",
+					data: [
+						{
+							label: "{{mac|truncate(5,true,'')}}",
+							data: [ ],
+            },
+                ]
+        },
+				{
+					group: "sessions",
+					data: [
+						{
+							label: "{{mac|truncate(5,true,'')}}",
+							data: [ ],
+            },
+                ]
+          }
+      ]
+				
+        $.ajax({type: 'GET',
+          url: '/api/lookup/{{mac}}',
+          success: function(d) {
+            probes = d['data']['{{mac}}'].probes
+            probes[0].reverse()
+            probes[0].pop()
+            probes[0].forEach(function(s) {
+               data[0].data[0].data.push({timeRange: [s, s], 'val': 'B'})
+            })
+               
+            data[0].data[0].data.push({timeRange: [new Date(), new Date()], 'val': '[placeholder]'})
+            
+            $.ajax({type: 'GET',
+                    url: '/api/sessions/{{mac}}',
+                    success: function(d) {
+                      sessions = d[1]['sessions']
+                      drawtable()
+                      sessions.forEach(function(s) {
+                         data[1].data[0].data.push({timeRange: [s['enter'], s['exit'] ], 'val': 'A'})
+                      })
+                    data[1].data[0].data.push({timeRange: [new Date(), new Date()], 'val': '[placeholder]'})
+                    S.charts.timeline = TimelinesChart()
+                    S.charts.timeline.leftMargin(50).width(640).maxLineHeight(50).data(data)('#probechart')
+                    }
+            })	
+          }
+      })
+			
+			function drawtable() {
+				S.datatable = $('#sessions').DataTable({
+					data: sessions,
+					autoWidth: true,
+					select: true,
+					colReorder: true,
+					buttons  : ['colvis','csv'],
+					columns: [
+						{ 'data': 'enter' },
+						{ 'data': 'exit' },
+						{ 'data': 'duration' }
+					]
+				})
+
+			}
+    })
+		</script>
+
+		% endblock
+
+<!-- vim: set ts=2 sw=2 ai expandtab softtabstop=2 --!>

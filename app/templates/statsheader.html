@@ -1,0 +1,72 @@
+    % block content
+        
+            <!-- statsheader !-->
+            
+            <div class='center table-responsive'>
+              <table class='table table-condensed stats' cellspacing=0>
+                <tbody>
+                  <td class='left' width='140px'>
+                      <span class='probestats text-right small'>
+                        <span id='probes_per_second'>0</span>/s
+                        <span id='probes_per_minute'>0</span>/m<br>
+                        <span id='probes_per_hour'>0</span>/h
+                        <span id='probes_per_day'>0</span>/d<br>
+                      </span>
+                    </td>
+                  <td class='pgraph' width='90px'>
+                  </td>
+                    <td class='col-lg-3'>
+                      <span style='font-family: Berkshire Swash; font-size: 2em; text-align: left; color: #003366'>
+                        <a href='/'>Sigmon</a></span>
+                      <a class=link title='toggle editable UI grids' onclick='console.log("Toggling gridser");toggleGridster()'>
+                        <span class='glyphicon glyphicon-edit'></span>
+                      </a>
+                    </td>
+                    <td> <table>
+                        <tr>
+                          <td>
+                            <a target='_new' href='/tail'>live</a>
+                            <a target='_new' href='/cloud'>cloud</a>
+                            <a target='_new' href='/map'>map</a>
+                            <i>config</i>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td>
+                            <a target='_new' href='/graphs'>graphs</a>
+                            <a target='_new' href='/d3g'>nodes</a>
+                            <i>search</i>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                    
+                    <td class='span1 small'>
+                      <a target='_new' href='/devices'> <div class='currentsensors badge'>
+                        {{ data.sensors|length }} </div><br>sensors</a>
+                    </td>
+                    <td class='span1 small'>
+                      <div class='currentprobes badge'>{{ data.currentprobes }}</div>
+                        <br> probes</td>
+                    <td class='span1 small'>
+                      <div class='currentmacs badge'>{{ data.probes|length }}</div>
+                        <br> macs</td>
+                    <td class='span1 small'>
+                      <div class='currentvendors badge'>{{ data.vendors|length }}</div>
+                        <br> vendors</td>
+                    <td class='span1 small'>
+                      <div class='currentssids badge'>{{ data.ssids|length }}</div>
+                        <br> ssids</td>
+                    <td class='span1 small'>
+                      <div class='currentaps badge'>{{ data.aps|length }}</div>
+                        <br> aps</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          
+            <!-- // statsheader !-->
+          
+      % endblock
+
+<!-- vim: set ts=2 sw=2 ai expandtab softtabstop=2 --!>

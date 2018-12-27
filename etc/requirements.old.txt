@@ -1,0 +1,16 @@
+eve
+flask
+Flask-Session
+flask_bootstrap 
+humanize
+impacket
+manuf
+netaddr
+pcapy
+pid
+pprint
+pymongo
+pytz
+scapy
+tqdm
+py_daemon

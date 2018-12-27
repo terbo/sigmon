@@ -1,0 +1,104 @@
+    % block content
+            <!-- probeview !-->
+						<div class='container-fluid'>
+              <div class='row-fluid'>
+                <span id='probechanger'></span><span id='probetitle' style='background: #eee; font-size: 1.2em'>Probes {{mins}} minutes</span>
+                <span class="container" id='datepick'>
+                  <span class='col-sm-2'>
+                    <span class="form-group">
+                      <span class='input-group date' id='datetimepickerfrom'>
+                        <input type='text' class="form-control" style='font-size: .7em'/>
+                        <span class="input-group-addon">
+                          <span class="glyphicon glyphicon-calendar"></span>
+                        </span>
+                      </span>
+                      <span class='input-group date' id='datetimepickerto'>
+                        <input type='text' class="form-control" style='font-size: .7em'/>
+                        <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                      </span>
+                    </span>
+                  </span>
+                </span>
+                <button type='button' class='btn btn-dark' id='submitdate'>
+                  <span class="glyphicon glyphicon-chevron-right"></span></button>
+                
+                <table id='datatable' class='table-responsive table-striped
+                                             table-condensed table-hover display
+                                             dbtable nowrap' cellspacing='0'>
+                  <thead>
+                    <tr>
+                      <th></th>
+                      <th class='span1' id='sensors'>seen by</th>
+                      <th class='span1' style='max-length: .8em' id='mac'>macr</th>
+                      <th class='span1' id='mac'>vendor</th>
+                      <th id='lastrssi'>rssi (-/+)</th>
+                      <th id='probes'>probes</th>
+                      <th class='span1' style='max-length: 2em' id='ssids'>ssids</th>
+                      <th class='span1' id='lastseen'>lastseen</th>
+                      <th class='span1' id='firstseen'>firstseen</th>
+                      <th id='sessioncount'>sessions</th>
+                      <th class='span2' id='tags'>tags</th>
+                    </tr>
+                  </thead>
+                  <tbody>{% for pkt in data.probes -%}
+                    <tr id='{{pkt._id}}' data-toggle='popover' title='Device: {{pkt._id}}'
+                      data-container='table' data-placement='auto' data-trigger='focus click hover'>
+                      <td class='details-control' id='details-control'></td>
+                      <td class='span1' id='sensors'>
+                        <span class='small' id='sensors'> {% for s in data.sensors -%}
+                          {{ data.sensors[s].orientation }} {% endfor -%}
+                        </span>
+                      </td>
+                      <td class='span1 small'>
+                        <span>
+                          <a style='cursor: zoom-in' onclick='do_modal("mac","{{pkt._id }}")'>{{ pkt._id | truncate(5,true,"") }}</a>: {% if pkt.vendor != 'Unknown' -%}
+                            <a style='cursor: zoom-in' onclick='do_modal("ssid","{{pkt.vendor}}")'>{{ pkt.vendor }}</a>
+                            {% else %} {{ pkt.vendor }} {% endif %}
+                        </span>
+                      </td>
+                      <td data-sort='{{ pkt.minrssi }}'>
+                        <span class='small'>{{ pkt.lastrssi }} ({{pkt.minrssi}},{{pkt.maxrssi}})</span>
+                      </td>
+                      <td>
+                        <span>{{ pkt.probes }}</span>
+                      </td>
+                      <td class='span1'>
+                        {% for ssid in pkt.ssids|sort -%} {% if ssid != '' and loop.index <= 3 -%}
+                        <span class='small'>
+                          <a target='_new' href='/lookup/ssid/{{ ssid }}'>{{ ssid }}</a>
+                        </span> {% endif %} {% endfor %}
+                      </td>
+                      <td data-sort-type='number' data-order='{{pkt.lastseens}}' data-sort='{{pkt.lastseens}}' data-search='{{pkt.time}}'>
+                        <span><b class='hidden'> {{ pkt.lastseens }} </b> {{ pkt.lastseen }}</span>
+                      </td>
+                      <td class='span1'>
+                        {{ pkt.firstseen | replace('2018-','') }}
+                      </td>
+                      <td>
+                        {{ pkt.sessioncount }}
+                      </td>
+                      <td class='span1'>
+                        <input data-role='tagsinput' type='text' id='tags'
+                        value='{% for tag in pkt.tags -%}{% if loop.index <= 4 -%} {{ tag }} {% endif %},{% endfor %}'>
+                        <span class='hide tags'>
+                          {% for tag in pkt.tags -%}<span id='{{ tag }}'></span>{% endfor %}
+                        </span>
+                      </td>
+                    </tr>{% endfor %}
+                  </tbody>
+                </table>
+              </div> 
+            </div>
+            
+            <!-- //probeview !-->
+    
+    % endblock
+
+    % block scripts
+    
+    <script>
+     window.ssidlist = [{% for ssid in ssids|sort -%}'{{ssid|safe}}',{% endfor -%}] 
+    </script>
+   
+   % endblock

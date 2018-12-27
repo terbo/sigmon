@@ -1,0 +1,30 @@
+      <!-- devices !-->
+              % set modaltitle = 'Personal Devices'
+              % set modalname = 'mydevs'
+              % set modalhtml
+              <div class='table-responsive'>
+                <table id='mydevs' class='table table-inverse table-bordered table-hover'>
+                <tr id='device' class='hide'>
+                  <td>
+                    <button class='btn btn-xs btn-primary' id='edit'>Edit</button>
+                    <button class='btn btn-xs btn-info' id='info'>Info</button>
+                    <button class='btn btn-xs btn-danger' id='track'>Track</button>
+                  </td>
+                  <td id='mac'>
+                    <div></div>
+                  </td>
+                  <td id='sensor'>
+                    <div></div>
+                  </td>
+                  <td id='lastseen'>
+                    <div></div>
+                  </td>
+                </tr>
+                </table>
+              </div>
+              % endset
+      <!-- // devices !-->
+
+      % include 'modal.html'
+
+<!-- vim: set ts=2 sw=2 ai expandtab softtabstop=2 --!>

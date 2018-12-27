@@ -1,0 +1,27 @@
+Snoopy - The original
+https://github.com/sensepost/snoopy
+
+Snoopy-NG - The Update
+https://github.com/sensepost/snoopy-ng
+
+CreepyDOL - Demonstration only - The Speaker who inspired me to start writing sigmon
+https://blog.ussjoin.com/2013/08/creepydol.html
+
+WiWo - From the authors of impacket
+https://n0where.net/802-11-massive-monitoring-wiwo
+https://github.com/CoreSecurity/wiwo
+
+Probr - A Masters Project from the University of Zurich
+http://probr.ch
+http://github.com/probr
+
+Kismet - Granddaddy Wireless Suite, now being updated, and would you look at the interface...
+http://kismetwireless.net
+https://github.com/kismetwireless/kismet
+
+Airodump - Suite of wireless tools, airodump was my model for the initial sigmon CLI
+https://www.aircrack-ng.org/
+https://github.com/aircrack-ng/aircrack-ng
+
+Maltego - The visualization software used by snoopy, uses node graphs to model collected info
+http://paterva.com

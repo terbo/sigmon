@@ -1,0 +1,31 @@
+    % block content
+        
+            <!-- statsfooter !-->
+            
+            <div class='table-responsive'>
+              <table class='table table-condensed stats' cellspacing=0>
+                <tbody>
+                  <tr class='small'>
+                    <td class='span1'> <b>overall</b></td>
+                    <td class='span1'>probes:
+                      <span class='probes'>{{ data.totals.probes }}</span></td>
+                    <td class='span1'>aps:
+                      <span class='aps'>{{ data.totals.aps }}</span></td>
+                    <td class='span1'>devices:
+                      <span class='devices'>{{ data.totals.devices }}</span></td>
+                    <td class='span1'>sessions:
+                      <span class='sessioncount'>{{ data.totals.sessions }}</span></td>
+                    <td class='span1'>vendors:
+                      <span class='vendors'>{{ data.totals.vendors }}</span></td>
+                    <td class='span1'>ssids:
+                      <span class='ssids'>{{ data.totals.ssids }}</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          
+            <!-- // statsfooter !-->
+          
+      % endblock
+
+<!-- vim: set ts=2 sw=2 ai expandtab softtabstop=2 --!>

@@ -1,0 +1,52 @@
+    % block content
+            <!-- probeview !-->
+              <h3 style='background: #eee'>Probes {{mins}} minutes</h3>
+              <table id='datatable' class='table-responsive table-striped
+                                             table-condensed table-hover display
+                                             dbtable nowrap' cellspacing='0'>
+                  <thead>
+                    <tr>
+                      <th id='details'></th>
+                      <th class='span1' id='sensors'>seen by</th>
+                      <th class='span1' style='max-width: .8em' id='mac'>mac</th>
+                      <th class='span1' id='vendor'>vendor</th>
+                      <th id='lastrssi'>rssi (-/+)</th>
+                      <th id='probes'>probes</th>
+                      <th class='span1 small' style='max-width:2em' id='ssids'>ssids</th>
+                      <th class='span1' id='lastseen'>lastseen</th>
+                      <th class='span1' id='firstseen'>firstseen</th>
+                      <th id='sessioncount'>sessions</th>
+                      <th class='span2' id='tags'>tags</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr data-toggle='popover' title='Device: '
+                      data-container='table' data-placement='auto' data-trigger='focus click hover'>
+                      <td class='details-control' id='details-control'></td>
+                      <td class='span1' id='sensors'>
+                        <span class='small' id='sensors'>
+                        </span>
+                      </td>
+                      <td class='span1 small'>
+                      </td>
+                      <td>
+                      </td>
+                      <td>
+                      </td>
+                      <td class='span1'>
+                      </td>
+                      <td>
+                        <span></span>
+                      </td>
+                      <td class='span1'>
+                      </td>
+                      <td>
+                      </td>
+                      <td class='span2' style='max-width:10%;width:10%;overflow:hidden'>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+    % endblock
+
+<!-- vim: set ts=2 sw=2 ai expandtab softtabstop=2 --!>

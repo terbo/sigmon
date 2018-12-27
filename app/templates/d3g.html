@@ -1,0 +1,33 @@
+  % extends 'sigmon.html'
+
+  % block content
+  <div class='counter' style='position: relative; top:0;left:0'>
+    <span class='counter' id='ssids'>0</span>s
+    <span class='counter' id='aps'>0</span>a
+    <span class='counter' id='macs'>0</span>m
+    <span class='counter' id='probes'>0</span>p
+    <span class='shown'>0</span>
+  </div>
+  <div id='d3g'> </div>
+  % endblock
+  
+  % block styles
+  {{super()}}
+  <link href="https://fonts.googleapis.com/css?family=Orbitron" rel="stylesheet">
+    <style>
+      body,svg { background: #020020; top: 0; left: 0; padding: 0; margin: 0 ; overflow: none; }
+      svg { position: relative; opacity: .8 }
+      div.counter { position: relative; top:0; left: 0; color: green }
+      span.counter { font-family: 'Orbitron', sans-serif; color: lightgreen; font-size: 1.6em }
+      .row { display: block; margin: 2px; }
+      #d3g { position: absolute; top: 0; left: 0 }
+    </style>
+  % endblock
+
+  % block scripts
+  {{super()}}
+    <script src='/static/js/d3.min.js'></script>
+    <script src='/static/js/d3g.js'></script>
+  % endblock
+
+<!-- vim: set ts=2 sw=2 ai expandtab softtabstop=2 --!>

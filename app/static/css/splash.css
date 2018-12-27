@@ -1,0 +1,149 @@
+body {
+  background: #111;
+  text: yellow;
+  padding: 0;
+  margin: 0;
+  overflow: none;
+}
+div.background {
+  top: 0px;
+  left: 0px;
+  opacity: 0.25;
+  max-width: 100%;
+  max-height: 100%;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  position: fixed;
+  display: inline;
+}
+img.background { width: 100%;
+                 height: 100%;
+                 background-size: cover;
+                 -ms-background-size: cover;
+                 -o-background-size: cover;
+                 -moz-background-size: cover;
+                 -webkit-background-size: cover;
+}
+.title, .description {
+  font-family: 'Fenix', serif;
+  font-style: italic;
+  font-size: .4em;
+  color: #121212;
+  text-shadow: 1px 2px #005a9c;
+  opacity: 0.1;
+}
+span#title {
+  padding: 0;
+  margin: 0;
+  background: rgb(200,200,200, .2);
+  border: 3px groove;
+  border-radius: 12px;
+  border-bottom-right-radius: 75px;
+  border-bottom-left-radius: 74px;
+  border-top-right-radius: 75px;
+  border-top-left-radius: 75px;
+  border-color: rgb(0,90,156, .2)
+}
+
+.description {
+  font-family: 'Cormorant Garamond', serif;
+  color: #005a9c;
+  text-shadow: 1px 1px white;
+  font-size: .20em;
+  opacity: 0.1;
+}
+.description i {
+  text-shadow: 1px 2px orange;
+  font-size: .2px;
+  font-style: bold;
+}
+#graph #d3graph {
+  display: inline;
+  position: fixed;
+  top: 0px;
+  left: 0px;
+}
+.bordered {
+  border: 2px grey outset;
+  -moz-border-radius-topright: 45px;
+  -webkit-border-top-right-radius: 45px;
+  border-top-right-radius: 45px;
+  -moz-border-radius-bottomright: 28px;
+  -webkit-border-bottom-right-radius: 28px;
+  border-bottom-right-radius: 28px;
+  -moz-border-radius-bottomleft: 35px;
+  -webkit-border-bottom-left-radius: 35px;
+  border-bottom-left-radius: 35px;
+}
+.link {
+  stroke: #2E2E2E;
+  stroke-width: 1px;
+  color: darkblue;
+}   
+.node {
+  stroke: #fff;
+  stroke-width: 1px;
+}   
+.textClass {
+  stroke: orange;
+  font-family: "Lucida Grande", "Droid Sans", Arial, Helvetica, sans-serif;
+  color: orange;
+  font-weight: normal;
+  stroke-width: 0px;
+  font-size: 11px;
+  text-shadow: 2px 2px white;
+}
+div#graphDebug {
+  bottom: 0px;
+  max-height: 30%;
+  height: 30%;
+  max-width: 100%;
+  margin: 20px;
+  padding-bottom: 0px;
+  border: yellow 1px inset;
+  position: absolute;
+  display: inline;
+  background-color: black;
+  background-opacity: 0.1;
+  overflow: scroll;
+}
+#graphDebug {
+  opacity: 0.6;
+  color: yellow;
+  font-size: .8em;
+}
+div#graphData {
+  top: 50%;
+  max-height: 30%;
+  height: 30%;
+  width: 30%;
+  overflow: scroll;
+  max-width: 30%;
+  position: absolute;
+  display: inline;
+  background-opacity: 0.1;
+  background-color: black;
+}
+#graphData {
+  opacity: 0.6;
+  color: orange;
+  font-size: .8em;
+}
+#graphControl input {
+  max-width: 4em;
+}
+span#graphControl {
+  top: 10px;
+  left; -75px;
+  font-size: .7em;
+  color: green;
+  max-width: 4em;
+  width: 12em;
+}
+pre {
+  background-color: black;
+  background-opacity: .4;
+}
+
+.navbar { font-size: 2em }

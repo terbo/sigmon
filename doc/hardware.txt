@@ -1,0 +1,9 @@
+https://www.amazon.com/hz/wishlist/ls/20OP4JJQ0MWID
+
+With a minimal Raspberry Pi setup a sensor could cost around $50, using a $15 TP-Link adapter.
+
+The question is if using a card that is $30 more is worth the extra few probes. Going to compare the cards and antennas soon.
+
+There is also the possibility of using two TP-Links with two Alfa 7dbi's, for almost 300 degrees of coverage, for a $10 dollars or more, minus the cost of a powered USB hub.
+
+Downloaded almost all of the PDF's for Alfa cards, with power ratings; they are in /doc

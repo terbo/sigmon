@@ -1,0 +1,17 @@
+        <div class='navbar'>
+          % if authenticated
+          % set loginaction = 'logout'
+          % else
+          % set loginaction = 'login'
+          % endif
+          <a class=link title='login' onclick="do_modal('{{loginaction}}')">{{loginaction}}</a>
+          &nbsp;
+          <a href='/legal' id='legal'>legal</a>
+          <hr style='display:inline'>
+          <hr style='display:inline'> &nbsp;
+          <a href='http://github.com/terbo/sigmon'>source</a>
+          <a href='http://github.com/terbo/sigmon/issues'>issues</a>
+          <a href='http://github.com/terbo/sigmon/wiki'>wiki</a>
+        </div>
+
+<!-- vim: set ts=2 sw=2 ai expandtab softtabstop=2 --!>

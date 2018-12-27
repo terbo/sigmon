@@ -1,0 +1,44 @@
+      % block content
+      <!-- login !-->
+              % set modaltitle = 'Sigmon Gatekeeper'
+              % set modalname = 'login'
+              % set modalhtml
+
+              <form name='login' id='login' class='form-inline'>
+                <div class='form-group'>
+                  <label class='sr-only' for='username'>ID</label>
+                  <input type='username' name='showmeyourusername' 
+                    class='form-control' placeholder='Username'
+                    autocomplete='username'>
+                </div>
+                <div class='form-group'>
+                  <label class='sr-only' for='password'>Secret</label>
+                  <input type='password' name='nowihaveyourpassword'
+                    class='form-control' placeholder='Password'
+                    autocomplete='current-password'>
+                </div>
+                <div class='checkbox'>
+                  <label>
+                  <input type='checkbox' checked disabled> Forget me not!
+                  </label>
+                </div>
+                  <button id='submit' type='submit' class='btn btn-danger'>Authenticate</button>
+              </form>
+
+              <script>
+                var form = document.getElementById('login')
+								function do_login(e) {
+                  e.preventDefault();
+									var data = $('form').serializeArray()
+									$('.modal').modal('hide')
+                  window.location.replace('/o')
+								}
+                form.addEventListener('submit', do_login);
+              </script>
+              % endset 
+      <!-- // login !-->
+      
+      % include 'modal.html'
+
+      % endblock
+<!-- vim: set ts=2 sw=2 ai expandtab softtabstop=2 --!>

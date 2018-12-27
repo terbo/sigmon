@@ -1,0 +1,116 @@
+from __future__ import absolute_import
+from __future__ import division
+
+""" rest.py 0.01 - (c) cbt 10/01/16 """
+
+VERSION         = (0, 9, '9x')
+__version__     = '.'.join((str(_) for _ in VERSION))
+__author__      = 'CB Terry https://github.com/terbo'
+__url__         = 'https://github.com/terbo/sigmon'
+
+# read code, comment code, write code
+# write code, write code, read code
+# write code, comment code, comment code
+# comment code, comment code, read code
+
+from datetime import timedelta, datetime as dt
+import pytz
+
+import logging
+from logging import error, debug, info
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(funcName)s %(threadName)s(%(lineno)d) -%(levelno)s: %(message)s')
+
+from pymongo import MongoClient as M
+from pymongo.errors import BulkWriteError 
+
+from netaddr import EUI
+from app import app
+from flask import Flask, abort, jsonify
+
+TZ=pytz.timezone('US/Pacific')
+UTC=pytz.timezone('UTC')
+
+SIGMON_ROOT =      os.environ.get(SIGMON_ROOT,'/sigmon')
+SIGMON_DATA =      os.environ.get(SIGMON_DATA,'/data/sigmon')
+SIGMON_PCAP =      os.environ.get(SIGMON_PCAP,'/sigmon/app/static/captures/_incoming')
+SIGMON_MONGO_URL = os.environ.get('SIGMON_MONGO_URL','localhost')
+
+mongo = M(host=SIGMON_MONGO_URL, tz_aware=True)
+db   = mongo.sigmon
+col  = db.probes
+hostname = platform.node()
+
+def addpacket(pkt):
+  try:
+    pkt.update({'time': dt.fromtimestamp(pkt['time']).replace(tzinfo=TZ)})
+    pkt.update({'pktime': dt.fromtimestamp(pkt['pktime']).replace(tzinfo=TZ)})
+    db.probes.insert_one(pkt)
+  except Exception as e:
+    error(e)
+
+def loghit(r):
+  db.weblogs.insert_one({ 'useragent': r.headers.get('User-Agent'),
+  'remote_ip': r.remote_addr,
+  'time_in': time(),
+  'request_type': r.method,
+  'request_uri': r.access_route[0],
+  'time_in': dt.now(),
+  'remote_user': r.remote_user,
+  'somehost': r.host})
+
+# activates device_worker, will it block?
+@app.route('/api/workers',methods=['GET'])
+def launch_device_worker():
+  enter = dt.now()
+  debug(device_worker())
+  exit = dt.now()
+  runtime = hm.naturaldelta(exit - enter)
+  debug('Device Worker Runtime: %s' % runtime)
+  
+  debug(session_worker())
+  debug(stats_worker())
+  
+  return OK(1)
+
+
+# allows POST entries - use SSH key auth / random generated?
+@app.route('/api/upload',methods=['POST'])
+def apiInsert():
+  loghit(request)
+
+  #vrfy sensor ip and name
+  if 'Sensor' in request.headers and 'APIKey' in request.headers:
+    content_type = request.headers['Content-Type']
+    sensor = request.headers['Sensor']
+    apikey = request.headers['APIKey']
+    postfrom = request.remote_addr
+
+    if content_type == 'multipart/form-data':
+      length = request.content_length
+      data = request.stream.read();
+      filename = secure_filename(request.headers['Original-Filename'])
+   
+      if len(data) != length:
+        abort(405)
+      
+      debug("Received file '%s' (%s bytes) from %s (%s)" % ( filename, length, postfrom, sensor ))
+      savecap(filename, data)
+      return OK(1)
+
+    elif content_type == 'application/json':
+      data = request.get_json()
+      #debug("Received JSON (%s elements) from %s (%s)" % ( len(data), postfrom, sensor ))
+      addpacket(data)
+      return OK(1)
+    # simple standalone reciever - eve or flask listen, submit to mongo, bout it 
+  
+  abort(403)
+
+
+def OK(ok=1):
+  if ok == 1:
+    return jsonify({'result':True})
+  else:
+    return jsonify({'result':False})

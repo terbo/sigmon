@@ -1,0 +1,117 @@
+body { color: rgba(5, 2, 15, 0.61);
+       margin: 0; padding: 0; } 
+
+html, body { width: 100%; height: 100%;}
+
+div { margin: 0; padding: 0 }
+ul { margin: 0; padding: 0 }
+
+a.link { cursor: pointer }
+
+hr { display: inline; color: red }
+
+td.details-control {
+    background: url('/static/img/details_open.png') no-repeat center center;
+    cursor: pointer; }
+
+tr.shown td.details-control {
+    background: url('/static/img/details_close.png') no-repeat center center; }
+
+div.notification {
+  font-size: 1.4em;
+  text-align: center;
+  padding: 10px;
+  border: groove 1px white;
+  border-radius: .5em 5px;
+  width: auto; }
+
+span.notice { margin: 5px;
+              padding: 5px;
+              border: groove darkred;
+              border-radius: .5em 5px;
+              background-color: white; }
+
+table { max-width: 100%;
+        border: groove 1px rgba(5,2,15,0.1);
+        border-radius: .5em 5px;
+        width: 100%; }
+
+/*div.stats { height: 10%; }*/
+
+#heatmap { width: 100%; }
+
+#hourlygraph { width: 750px;
+               height: 200px;}
+
+#dailygraph { 
+              width: 750px;
+              height: 200px; }
+              
+
+#vendorchart { width: 200px; height: 200px; font-size: 11px; }
+
+#eventgraph { height: 300px;
+              width: auto; }
+
+#nvgraph { height: 100px;
+             background: white; color: darkblue;
+             width: 350px;
+             font-size: 1em;
+}
+
+ul#gridster { list-style: none inside;
+              padding: 0;
+              margin: 0; }
+/*li { overflow: auto }*/
+
+#tags, #probeview_filter, #probeview_info, #probeview_length {
+  text-align: right;
+  font-family: nova, mono;
+  font-size: smaller;
+  color: #555;
+  opacity: .8;
+  display: inline; }
+
+div #tags { padding: 10px; }
+#tags button { margin: 0 5px 0 5px }
+
+.dt-buttons a.btn { margin-right: .5em; }
+
+.row-fluid { background-color: #DDD; }
+
+.container-fluid { background-color: #FFF; }
+
+/*::-webkit-scrollbar {
+    width: 6px;
+}*/
+
+/* Track */
+/*::-webkit-scrollbar-track {
+    background: #f1f1f1; 
+}*/
+ 
+/* Handle */
+/*::-webkit-scrollbar-thumb {
+    background: #888; 
+}*/
+
+/* Handle on hover */
+/*::-webkit-scrollbar-thumb:hover {
+    background: #555; 
+}*/
+
+/*.modal-open body {
+    -webkit-filter: blur(1px) grayscale(90%);
+    -moz-filter: blur(1px) grayscale(90%);
+    -o-filter: blur(1px) grayscale(90%);
+    -ms-filter: blur(1px) grayscale(90%);
+    filter: blur(1px) greyscale(90%);
+}
+}*/
+
+body.modal-open .background-container{
+    -webkit-filter: blur(4px);
+    -moz-filter: blur(4px);
+    -o-filter: blur(4px);
+    -ms-filter: blur(4px);
+}

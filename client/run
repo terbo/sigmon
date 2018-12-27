@@ -1,0 +1,26 @@
+#!/bin/bash
+# sigmon 0.9dev3 / .001a
+
+cd /data/sigmon
+
+test -d /data/sigmon/logs/old || mkdir /data/sigmon/logs/old
+
+mv /data/sigmon/logs/*g /data/sigmon/logs/old && gzip /data/sigmon/logs/old/*g &
+
+iw dev ${SIGMON_MON_DEV} info || (
+  iw dev ${SIGMON_WLAN_DEV} interface add ${SIGMON_MON_DEV} type monitor && \
+  ifconfig ${SIGMON_WLAN_DEV} down && ifconfig ${SIGMON_MON_DEV} up ) ||  exit 255
+
+kill -9 `cat listen.pid`
+
+rm -f listen.pid
+
+logread -f &
+
+./chop ${SIGMON_MON_DEV}
+
+tail -f /var/log/* /var/log/*/* /data/sigmon/logs/*g &
+
+./listen.py &
+
+${*}

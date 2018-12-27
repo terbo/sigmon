@@ -1,0 +1,24 @@
+    % extends 'sigmon.html'
+    
+    % block content
+		<table id='ssidinfo'>
+			<tr>
+				<td align='center' colspan=3>
+          SSID <b> {{ name }} </b> BSSID {{ bssid }}
+				</td>
+				</tr>
+        <tr>
+          <td> Total Probes: {{ totalprobes }} </td>
+        </tr>
+        <tr>
+          <td> Clients: </td> </tr> <tr><td>
+          {% for mac in data %}
+          <b><a href='/lookup/mac/{{mac._id}}'>{{ mac._id }}</a></b>: <i>{{ mac.count }}</i><br>
+          {% endfor %}
+        </td>
+      </tr>
+    </table>
+
+    % endblock
+
+<!-- vim: set ts=2 sw=2 ai expandtab softtabstop=2 --!>

@@ -1,0 +1,44 @@
+      % block content
+      
+      <!-- login !-->
+              % set modaltitle = 'Sigmon Authentication'
+              % set modalname = 'login'
+              % set modalhtml
+							<div class="modal fade" id="modallogin" tabindex="-1" role="dialog" aria-hidden="true">
+								<div class="modal-dialog" role="document">
+									<div class="modal-content">
+										<div class="modal-header">
+											<h5 class="modal-title">{{ modaltitle }}</h5>
+										</div>
+										<div class="modal-body">
+											<form name='login' class="form-inline">
+												<div class="form-group">
+													<label class="sr-only" for="username">ID</label>
+													<input type="username" name='showmeyourusername' style='width:10em'
+														class="form-control" placeholder="Username">
+												</div>
+												<div class="form-group">
+													<label class="sr-only" for="password">Secret</label>
+													<input type="password" name='nowihaveyourpassword' style='width:10em'
+														class="form-control" placeholder="Password">
+												</div>
+												<div class="checkbox">
+													<label>
+													</label>
+												</div>
+													<button type="submit" class="btn btn-danger">Authenticate</button>
+											</form>
+										</div>
+										<div class="modal-footer">
+											<input type="checkbox" checked disabled> Forget me not!
+											<button type="submit" class="btn btn-danger">Authenticate</button>
+										</div>
+									</div>
+								</div>
+							</div>
+              % endset 
+      <!-- // login !-->
+      
+      % include 'modal.html'
+      
+      % endblock

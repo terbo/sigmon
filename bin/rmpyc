@@ -1,0 +1,2 @@
+#!/bin/sh
+find /data/sigmon -name '*.pyc' | xargs rm -fv
