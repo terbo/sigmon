@@ -111,7 +111,7 @@ Innumerable
 Total Rewrite
 
 ## Contact
-CB Terry - http://github.com/terbo
+CB Terry - terry.chad@gmail.com - http://github.com/terbo
 
 ## See Also
 Sigmon Wiki - https://github.com/terbo/sigmon/wiki
@@ -119,16 +119,21 @@ Sigmon Wiki - https://github.com/terbo/sigmon/wiki
 Projects with a similar scope:
 
 Snoopy - http://github.com/sensepost/snoopy-ng and https://github.com/sensepost/snoopy
+
 Probr - http://probr.ch/
+
 WiWo - https://n0where.net/802-11-massive-monitoring-wiwo/
+
 CreepyDOL - http://blog.ussjoin.com/2013/08/creepydol.html and https://github.com/ussjoin
+
 Kismet - https://kismetwireless.net
 
 Videos:
 
-http://www.youtube.com/watch?v=GvrB6S_O0BE - The Machines That Betrayed Their Masters by Glenn Wilkinson_
+http://www.youtube.com/watch?v=GvrB6S_O0BE - The Machines That Betrayed Their Masters by Glenn Wilkinson
 http://www.youtube.com/watch?v=ubjuWqUE9wQ - DEFCON 21 - Stalking a City for Fun and Frivolity
 http://www.youtube.com/watch?v=NjuhdKUH6U4 - DEFCON 20 - Can You Track Me Now? Government And Corporate Surveillance Of Mobile Geo-Location
 
 Future
 [Redacted]
+Actually, devices designed to run this software and interface with various radios, and services based around managing the resulting data stores, are planned.
