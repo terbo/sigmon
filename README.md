@@ -6,7 +6,7 @@
 
 Sigmon - Signal Monitor
 
-Original README:
+Original README from Oct 16 2014:
 
 Nowadays radio waves are crowded with signals; indeed, nearly every person has a radio transmitter on them; some people have several. These transmitters are personal cellular, wireless, and bluetooth devices, and this program focuses on listening to their wireless signals.
 
@@ -25,7 +25,8 @@ Other uses for this data can be discovered; at the end of this file videos are l
 The current stage of this code is due to change soon, but in its current form a few systems must be running to install Sigmon:
 
 * Server: Linux machine with mongo database and python
-* Sensors: Linux machine - these devices can range from low end Access Points with shell access and tcpdump, to nearly any macine with a wireless card capable of entering Monitor Mode, which is compatible with Aircrack.
+* Sensors: Linux machine equipped wireless card(s) capable of entering Monitor Mode, which are compatible with Aircrack
+  The simplest script requires only sh and tcpdump, but the more robust python client requires the libpcap-dev library as well as the 'pcapy', 'impacket', and 'py_daemon' python modules.
 * Patience: A lot of stuff doesn't work and some results are incorrect
 
 A more detailed installation guide is in the file INSTALL.
