@@ -1,0 +1,5 @@
+#!/bin/bash
+cd /data/sigmon
+bash etc/settings.sh bin/rest.sh &
+bash etc/settings.sh bin/run.sh &
+bash etc/settings.sh bin/workers.sh
