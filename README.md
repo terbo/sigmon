@@ -1,6 +1,36 @@
-What is Sigmon?
+***PRELIMINARY PRE-ALPHA/NON-WORKING CODE***
+
+## What is Sigmon?
+
+"There will always be radios. There will only be more radios" - The Eternal Motto
 
 Sigmon - Signal Monitor
+
+Original README:
+
+Nowadays radio waves are crowded with signals; indeed, nearly every person has a radio transmitter on them; some people have several. These transmitters are personal cellular, wireless, and bluetooth devices, and this program focuses on listening to their wireless signals.
+
+Each time you connect to a wireless network and your device remembers the name, it indefinitally searches for it, as long as your wireless is turned on. The way it does this is by sending out 'probe' requests that contain the name of the access point you are looking for, in the form of a service set identifer (SSID). Also contained in this probe is your machine access control (MAC) address, which is completely unique to your device.
+
+These probes are sent into the airwaves unencrypted. What this means is that anyone listening for these probes can (a) uniquely identify each device and (b) view what networks each device is looking for. This program works with that data.
+
+Also included in this information is a relative signal strength, which can be used to determine approximate distance from the base station; with more base stations, finer granularity in location can be achieved.
+
+While some percentage of people have smart phones, a smaller number have wireless always enabled. Even so, the number of results this program shows can be used to form a demographic map.
+
+Other uses for this data can be discovered; at the end of this file videos are linked that include some of the wide ranging security implications.
+
+## Requirements
+
+The current stage of this code is due to change soon, but in its current form a few systems must be running to install Sigmon:
+
+* Server: Linux machine with mongo database and python
+* Sensors: Linux machine - these devices can range from low end Access Points with shell access and tcpdump, to nearly any macine with a wireless card capable of entering Monitor Mode, which is compatible with Aircrack.
+* Patience: A lot of stuff doesn't work and some results are incorrect
+
+A more detailed installation guide is in the file INSTALL.
+
+## Background
 
 It started as a wireless probe monitor, modeled after a defcon talk featuring a
 hacker who never released his implementation publically, instead only
@@ -19,6 +49,8 @@ Because of the nature of the endeavour, the back end of the software quickly bec
 Though it can technically be called spying, what is done with the information is what determines its culpability. Sigmon is designed to be set up aside other security measures, giving consciousness to the data flying around us daily.
 
 Because it is not a fool proof system, as there are many ways to manipulate radio waves, it requires a place where security is already the standard. Yet because of its unique nature it can quickly provide insight and understanding where it is deployed, covering bases that traditional security measures will always miss.
+
+## Design
 
 What follows is a detailed overview of the current POC lab.
 
@@ -55,16 +87,48 @@ should be possible, as well as dynamically updating the d3 charts and graphs. [x
 
 A Leaflet map is also in use, and will hopefully be able to overlay usage maps based on triangulation or weights. [x]
 
+## Future
+
 Where does it go from here?
 
-I've identified four main areas that would need to be focused on to make Sigmon a commercial success.
+I've identified four main areas that would need to be focused on to make Sigmon a software/commercial success.
 
 Programming
 Database
 Marketing
 Logistics
+
 The number of ideas for the software is vast but a focus on the smaller pieces and a conservative outcome should make it easier to produce.
 
 Simplifying the code and choosing the right frameworks will make the project easier to maintain and ensure stability and minimal resource usage.
 
 With the current written plans and running software that is Sigmon beta, capable engineers should be able to reproduce this setup without extreme effort.
+
+## BUGS
+Innumerable
+
+## TODO
+Total Rewrite
+
+## Contact
+CB Terry - http://github.com/terbo
+
+## See Also
+Sigmon Wiki - https://github.com/terbo/sigmon/wiki
+
+Projects with a similar scope:
+
+Snoopy - http://github.com/sensepost/snoopy-ng and https://github.com/sensepost/snoopy
+Probr - http://probr.ch/
+WiWo - https://n0where.net/802-11-massive-monitoring-wiwo/
+CreepyDOL - http://blog.ussjoin.com/2013/08/creepydol.html and https://github.com/ussjoin
+Kismet - https://kismetwireless.net
+
+Videos:
+
+http://www.youtube.com/watch?v=GvrB6S_O0BE - The Machines That Betrayed Their Masters by Glenn Wilkinson_
+http://www.youtube.com/watch?v=ubjuWqUE9wQ - DEFCON 21 - Stalking a City for Fun and Frivolity
+http://www.youtube.com/watch?v=NjuhdKUH6U4 - DEFCON 20 - Can You Track Me Now? Government And Corporate Surveillance Of Mobile Geo-Location
+
+Future
+[Redacted]
