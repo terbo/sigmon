@@ -4,7 +4,7 @@
 
 "There will always be radios. There will only be more radios" - The Sigmon Creed
 
-Sigmon - Signal Monitor
+Sigmon - Signal Monitor - [Screenshots](doc/screens/)
 
 Original README from Oct 16 2014:
 
