@@ -2,7 +2,7 @@
 
 ## What is Sigmon?
 
-"There will always be radios. There will only be more radios" - The Eternal Motto
+"There will always be radios. There will only be more radios" - The Sigmon Creed
 
 Sigmon - Signal Monitor
 
@@ -94,16 +94,20 @@ Where does it go from here?
 
 I've identified four main areas that would need to be focused on to make Sigmon a software/commercial success.
 
-Programming
-Database
-Marketing
-Logistics
+* Programming
+* Database
+* Marketing
+* Logistics
 
 The number of ideas for the software is vast but a focus on the smaller pieces and a conservative outcome should make it easier to produce.
 
 Simplifying the code and choosing the right frameworks will make the project easier to maintain and ensure stability and minimal resource usage.
 
 With the current written plans and running software that is Sigmon beta, capable engineers should be able to reproduce this setup without extreme effort.
+
+Devices designed to run this software and interface with various radios
+
+Services based around managing the resulting data stores
 
 ## BUGS
 Innumerable
@@ -134,7 +138,3 @@ Videos:
 http://www.youtube.com/watch?v=GvrB6S_O0BE - The Machines That Betrayed Their Masters by Glenn Wilkinson
 http://www.youtube.com/watch?v=ubjuWqUE9wQ - DEFCON 21 - Stalking a City for Fun and Frivolity
 http://www.youtube.com/watch?v=NjuhdKUH6U4 - DEFCON 20 - Can You Track Me Now? Government And Corporate Surveillance Of Mobile Geo-Location
-
-Future
-[Redacted]
-Actually, devices designed to run this software and interface with various radios, and services based around managing the resulting data stores, are planned.

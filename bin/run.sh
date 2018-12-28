@@ -133,13 +133,13 @@ main_loop() {
         printf "   ["; for i in {1..$(( $COLS - 3))}; do printf '_'; done; echo ']'
         bin/cmd.sh probes_per_hour | ccze -A &
         bin/cmd.sh active_sensors  2>&1 > /dev/null 
-        #wget -q --output-document=- http://10.0.0.110/api/overview &
+        #wget -q --output-document=- http://1.0.0.1/api/overview &
         #printf "   ["; for i in {1..32}; do printf '_'; done; echo ']'
-        wget -q --output-document=/dev/null http://10.0.0.1:8080/api/sensors/active | ccze -A &
+        wget -q --output-document=/dev/null http://1.0.0.1:8080/api/sensors/active | ccze -A &
         LAST_CHECKED=$(timeu)
       #elif [ "$(( $(timeu) - $LAST_CHECKED ))" -gt "$(( $WORKER_TIME * 60 ))" ]; then
       #  echo "Launching workers"
-      #  wget -q --output-document=- http://10.0.0.110/api/workers &
+      #  wget -q --output-document=- http://1.0.0.1/api/workers &
       #  LAST_CHECKED=$(timeu)
       fi
     done
