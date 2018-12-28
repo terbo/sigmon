@@ -4,7 +4,7 @@
 
 "There will always be radios. There will only be more radios" - The Sigmon Creed
 
-Sigmon - Signal Monitor - [Screenshots](doc/screens/)
+Sigmon - Signal Monitor
 
 Original README from Oct 16 2014:
 
@@ -19,6 +19,12 @@ Also included in this information is a relative signal strength, which can be us
 While some percentage of people have smart phones, a smaller number have wireless always enabled. Even so, the number of results this program shows can be used to form a demographic map.
 
 Other uses for this data can be discovered; at the end of this file videos are linked that include some of the wide ranging security implications.
+
+## Screenshots
+![Overview](doc/screens/overview.png)
+![Devices](doc/screens/devices.png)
+
+More screenshots in -[doc/screens/](doc/screens/)
 
 ## Requirements
 
