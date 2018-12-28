@@ -24,7 +24,7 @@ Other uses for this data can be discovered; at the end of this file videos are l
 ![Overview](doc/screens/overview.png)
 ![Devices](doc/screens/devices.png)
 
-More screenshots in -[doc/screens/](doc/screens/)
+More screenshots in [doc/screens/](doc/screens/)
 
 ## Requirements
 
