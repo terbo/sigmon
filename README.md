@@ -1,3 +1,4 @@
+# Sigmon [![Chat]()]()
 ***PRELIMINARY PRE-ALPHA/NON-WORKING CODE***
 
 ## What is Sigmon?
@@ -20,9 +21,17 @@ While some percentage of people have smart phones, a smaller number have wireles
 
 Other uses for this data can be discovered; at the end of this file videos are linked that include some of the wide ranging security implications.
 
+## Screenshots
+![Overview](doc/screens/overview.png)
+![Devices](doc/screens/devices.png)
+
+More screenshots in [doc/screens/](doc/screens/)
+
 ## Requirements
 
-The current stage of this code is due to change soon, but in its current form a few systems must be running to install Sigmon:
+*WARNING* This design uses an unauthenticated database connection, unencrypted data channels, and in general has no security or vulnerability checking. Run it on a private LAN.
+
+The code is due to change soon, but in its current form a few systems must be running to install Sigmon:
 
 * Server: Linux machine with mongo database and python
 * Sensors: Linux machine equipped wireless card(s) capable of entering Monitor Mode, which are compatible with Aircrack
@@ -33,9 +42,7 @@ A more detailed installation guide is in the file INSTALL.
 
 ## Background
 
-It started as a wireless probe monitor, modeled after a defcon talk featuring a
-hacker who never released his implementation publically, instead only
-taunting the audience with its features.
+It started as a wireless probe monitor, modeled after a defcon talk featuring a hacker who never released his implementation publically, instead only taunting the audience with its features.
 
 To this day I have looked at many of the public and free packages available for the tracking and recording of various personal radio transmissions, and while I'm sure that behind closed doors software that would blow our mind exists...
 
@@ -136,5 +143,7 @@ Kismet - https://kismetwireless.net
 Videos:
 
 http://www.youtube.com/watch?v=GvrB6S_O0BE - The Machines That Betrayed Their Masters by Glenn Wilkinson
+
 http://www.youtube.com/watch?v=ubjuWqUE9wQ - DEFCON 21 - Stalking a City for Fun and Frivolity
+
 http://www.youtube.com/watch?v=NjuhdKUH6U4 - DEFCON 20 - Can You Track Me Now? Government And Corporate Surveillance Of Mobile Geo-Location
