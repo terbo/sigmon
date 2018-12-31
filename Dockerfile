@@ -11,18 +11,15 @@ ADD . /usr/src/sigmon
 
 #install software dependencies
 RUN apt-get update
-RUN apt-get -y install iw wireless-tools libpcap-dev tcpdump mongodb ntpdate macchanger screen htop discus wget gcc \
-    cpp g++ make python2.7 python-pip python-pcapy python-bson 
+RUN apt-get -y install iw wireless-tools libpcap-dev tcpdump mongodb-clients ntpdate macchanger screen htop discus \
+    wget gcc cpp g++ make mosquitto-clients python2.7 python-pip python-pcapy python-bson 
     
 # We'll be installing impacket through pip later, so explicitly remove it here
 RUN apt-get -y remove python-impacket
 
 # Older versions of pip and distribute default to http://pypi.python.org/simple, which no longer works. The following
-# will update pip to use https. Note that, after this, you should use the command 'pip2.7' rather than just 'pip'.
+# will update pip to use https.
 RUN pip install -i https://pypi.python.org/simple -U pip distribute
 
 # Install PIP dependencies
 RUN pip2.7 install -r /usr/src/sigmon/etc/requirements.txt
-
-# run first time setup
-RUN python2.7 -uBRc 'from app.sigmon import *;first_setup();'

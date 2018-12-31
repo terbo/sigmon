@@ -31,7 +31,8 @@ import dateutil.parser, bson
 
 from logging import error, debug, info
 from collections import defaultdict
-import manuf, tqdm
+import tqdm
+from manuf import manuf
 from paho.mqtt import client as mqttclient
 import binascii
 
@@ -89,69 +90,86 @@ own_ssids = {'Any'}
 ##  Database helpers
 #####
 
-# going into the eve schema setup
 def first_setup():
-  collections = list(db.collection_names())
+    """
+    Establishes first-time sestup. All this really does at this point is sets up collections and indexing within
+    mongo. This probably isn't the best approach but it works for now.
+    """
+    collections = list(db.collection_names())
 
-  # link time and mac by newest probe first
-  # what about hashing the macs?
-  # remove non-alpha, lowercase
-  # all mac access is through a filter sub
-  # that removes, adds, anonymizes, or prettyfies standard mac
+    # link time and mac by newest probe first
+    # what about hashing the macs?
+    # remove non-alpha, lowercase
+    # all mac access is through a filter sub
+    # that removes, adds, anonymizes, or prettyfies standard mac
 
-  if 'probes' not in collections: db.create_collection('probes')
-  db.probes.drop_indexes()
-  db.probes.create_index('_created',sparse=True, background=True)
-  db.probes.create_index('time',sparse=True, background=True)
-  db.probes.create_index('mac',sparse=True, background=True)
-  db.probes.create_index([('time',pymongo.ASCENDING) ,('mac',pymongo.TEXT)],sparse=True, background=True)
+    if 'probes' not in collections:
+        db.create_collection('probes')
+    db.probes.drop_indexes()
+    db.probes.create_index('_created', sparse=True, background=True)
+    db.probes.create_index('time', sparse=True, background=True)
+    db.probes.create_index('mac', sparse=True, background=True)
+    db.probes.create_index([('time', pymongo.ASCENDING), ('mac', pymongo.TEXT)] ,sparse=True, background=True)
 
-  if 'probes.hourly' not in collections: db.create_collection('probes.hourly')
-  db.probes.hourly.drop_indexes()
-  db.probes.hourly.create_index('hour',sparse=True, background=True)
-  db.probes.hourly.create_index('mac',sparse=True, background=True)
-  db.probes.hourly.create_index([('hour',pymongo.ASCENDING) ,('mac',pymongo.TEXT)],sparse=True, background=True)
-  
-  if 'probes.daily' not in collections: db.create_collection('probes.daily')
-  db.probes.daily.drop_indexes()
-  db.probes.daily.create_index('day',sparse=True, background=True)
-  db.probes.daily.create_index('mac',sparse=True, background=True)
-  db.probes.daily.create_index([('day',pymongo.ASCENDING) ,('mac',pymongo.TEXT)],sparse=True, background=True)
+    if 'probes.hourly' not in collections:
+        db.create_collection('probes.hourly')
+    db.probes.hourly.drop_indexes()
+    db.probes.hourly.create_index('hour', sparse=True, background=True)
+    db.probes.hourly.create_index('mac', sparse=True, background=True)
+    db.probes.hourly.create_index([('hour', pymongo.ASCENDING), ('mac', pymongo.TEXT)], sparse=True, background=True)
 
-  if 'sensors' not in collections: db.create_collection('sensors')
-  
-  if 'ssids' not in collections: db.create_collection('ssids')
-  
-  if 'vendors' not in collections: db.create_collection('vendors')
-  
-  if 'aps' not in collections: db.create_collection('aps')
-  db.aps.drop_indexes()
-  db.aps.create_index('mac',sparse=True, background=True)
-  db.aps.create_index([('ssid',pymongo.TEXT),('mac',pymongo.TEXT)],sparse=True, background=True)
-  
-  if 'bts' not in collections: db.create_collection('bts')
+    if 'probes.daily' not in collections:
+        db.create_collection('probes.daily')
+    db.probes.daily.drop_indexes()
+    db.probes.daily.create_index('day', sparse=True, background=True)
+    db.probes.daily.create_index('mac', sparse=True, background=True)
+    db.probes.daily.create_index([('day',pymongo.ASCENDING), ('mac', pymongo.TEXT)], sparse=True, background=True)
 
-  if 'sessions' not in collections: db.create_collection('sessions')
-  db.sessions.drop_indexes()
-  db.sessions.create_index([('enter',pymongo.ASCENDING),('mac',pymongo.TEXT)],sparse=True, background=True)
+    if 'sensors' not in collections:
+        db.create_collection('sensors')
+
+    if 'ssids' not in collections:
+        db.create_collection('ssids')
+
+    if 'vendors' not in collections:
+        db.create_collection('vendors')
+
+    if 'aps' not in collections:
+        db.create_collection('aps')
+    db.aps.drop_indexes()
+    db.aps.create_index('mac', sparse=True, background=True)
+    db.aps.create_index([('ssid', pymongo.TEXT), ('mac', pymongo.TEXT)], sparse=True, background=True)
+
+    if 'bts' not in collections:
+        db.create_collection('bts')
+
+    if 'sessions' not in collections:
+        db.create_collection('sessions')
+    db.sessions.drop_indexes()
+    db.sessions.create_index([('enter',pymongo.ASCENDING), ('mac', pymongo.TEXT)], sparse=True, background=True)
+
+    if 'settings' not in collections:
+        db.create_collection('settings')
+
+    if 'logs.jobs' not in collections:
+        db.create_collection('logs.jobs')
+    if 'logs.sensors' not in collections:
+        db.create_collection('logs.sensors')
+    if 'logs.web' not in collections:
+        db.create_collection('logs.web')
+
+    if 'devices' not in collections:
+        db.create_collection('devices')
+    db.devices.drop_indexes()
+    db.devices.create_index('tags', sparse=True, background=True)
+    db.devices.create_index([('lastseen', pymongo.ASCENDING), ('mac', pymongo.TEXT)], sparse=True, background=True)
   
-  if 'settings' not in collections: db.create_collection('settings')
-  
-  if 'logs.jobs' not in collections: db.create_collection('logs.jobs')
-  if 'logs.sensors' not in collections: db.create_collection('logs.sensors')
-  if 'logs.web' not in collections: db.create_collection('logs.webs')
-  
-  if 'devices' not in collections: db.create_collection('devices')
-  db.devices.drop_indexes()
-  db.devices.create_index('tags', sparse=True, background=True)
-  db.devices.create_index([('lastseen',pymongo.ASCENDING),('mac',pymongo.TEXT)], sparse=True, background=True)
-  
-  # also, import template databases
-  # make indexes
-  # check versions
-  # check files
-  # etc
-  pass
+    # TODO:
+    # also, import template databases
+    # make indexes
+    # check versions
+    # check files
+    # etc
 
 def totalprobes():
   return db.probes.find().count()
@@ -1878,6 +1896,7 @@ def mqtt_connected(client, userdata, flags, rc):
   mqtt.subscribe('#')
 
 def check_wireshark():
+  
   wireshark_manuf = '%s/etc/manuf' % SIGMON_ROOT
 
   f = os.stat(wireshark_manuf)
@@ -1893,7 +1912,7 @@ db   = mongo.sigmon
 col  = db.probes
 hostname = platform.node()
 
-macparser = manuf.MacParser()
+macparser = manuf.MacParser(update=True)
 
 bulk_probes = bulk_daily = bulk_hourly = False
 unsynced = 0
@@ -1904,7 +1923,7 @@ mqtt.connect(SIGMON_MQTT_URL, SIGMON_MQTT_PORT, SIGMON_MQTT_KEEPALIVE)
 mqtt.on_connect = mqtt_connected
 mqtt.on_message = mqtt_message
 
-check_wireshark()
+#check_wireshark()
 
 info('Sigmon %s Loaded' % __name__)
 
