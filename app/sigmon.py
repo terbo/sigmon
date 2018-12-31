@@ -92,7 +92,7 @@ own_ssids = {'Any'}
 
 def first_setup():
     """
-    Establishes first-time sestup. All this really does at this point is sets up collections and indexing within
+    Establishes first-time setup. All this really does at this point is sets up collections and indexing within
     mongo. This probably isn't the best approach but it works for now.
     """
     collections = list(db.collection_names())
