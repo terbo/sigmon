@@ -23,3 +23,6 @@ RUN pip install -i https://pypi.python.org/simple -U pip distribute
 
 # Install PIP dependencies
 RUN pip2.7 install -r /usr/src/sigmon/etc/requirements.txt
+
+# run first time setup
+RUN python2.7 -uBRc 'from app.sigmon import *;first_setup();'
