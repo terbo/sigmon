@@ -64,7 +64,7 @@ SIGMON_PCAP = SIGMON_DATA + '/app/static/captures/incoming'
 
 SIGMON_MONGO_URL = os.environ.get('SIGMON_MONGO_URL', 'localhost')
 SIGMON_MQTT_URL = SIGMON_MONGO_URL
-SIGMON_MQTT_PORT = 1883
+SIGMON_MQTT_PORT = os.environ.get('SIGMON_MQQT_PORT', 1883)
 SIGMON_MQTT_KEEPALIVE = 60
 
 WORKER_SLEEP_TIME = {'session': 5, 'device': 1, 'stats': 4}
@@ -1907,7 +1907,7 @@ def check_wireshark():
     notice('oui-database','updating wireshark OUI database, last updated %s' % deltafy(last_updated))
     #macparser.update()
 
-mongo = M(host=SIGMON_MONGO_URL, tz_aware=True, connect=True)
+mongo = M(host=SIGMON_MONGO_URL, tz_aware=True, connect=False)
 db   = mongo.sigmon
 col  = db.probes
 hostname = platform.node()
@@ -1918,10 +1918,11 @@ bulk_probes = bulk_daily = bulk_hourly = False
 unsynced = 0
 
 mqtt = mqttclient.Client()
+
 mqtt.connect(SIGMON_MQTT_URL, SIGMON_MQTT_PORT, SIGMON_MQTT_KEEPALIVE)
 
-mqtt.on_connect = mqtt_connected
-mqtt.on_message = mqtt_message
+#mqtt.on_connect = mqtt_connected
+#mqtt.on_message = mqtt_message
 
 #check_wireshark()
 

@@ -1,0 +1,44 @@
+version: '3.5'
+
+services:
+  sigmon-mongo:
+    image: mongo
+    volumes:
+      - sigmon-mongo-data:/data/db
+    network_mode: host
+  sigmon-mosquitto:
+    image: eclipse-mosquitto
+    network_mode: host
+  sigmon-app:
+    build: .
+    environment:
+      - SIGMON_ROOT=/usr/src/sigmon
+      - SIGMON_DATA=/data/sigmon
+      - SIGMON_MONGO_URL=localhost
+      - SIGMON_MQQT_PORT=1883
+    network_mode: host
+    volumes:
+      - ./:/usr/src/sigmon
+    depends_on:
+      - sigmon-mongo
+      - sigmon-mosquitto
+    command: bin/run.sh 
+    tty: true
+    privileged: true
+volumes:
+  sigmon-mongo-data:
+
+
+
+  #~ elevator:
+    #~ container_name: elevator
+    #~ build:
+      #~ context: .
+      #~ dockerfile: Dockerfile
+    #~ volumes:
+      #~ - '.:/usr/src/app'
+      #~ - '/usr/src/app/node_modules'
+    #~ ports:
+      #~ - '3000:3000'
+    #~ environment:
+      #~ - NODE_ENV=development

@@ -3,7 +3,7 @@ FROM debian:7-slim
 
 # set working directory
 RUN mkdir /usr/src/sigmon
-RUN mkdir -p /data/sigmon
+RUN mkdir -p /var/data/sigmon/app/static/captures/incoming
 WORKDIR /usr/src/sigmon
 
 # We're going to need this during setup
@@ -12,7 +12,7 @@ ADD . /usr/src/sigmon
 #install software dependencies
 RUN apt-get update
 RUN apt-get -y install iw wireless-tools libpcap-dev tcpdump mongodb-clients ntpdate macchanger screen htop discus \
-    wget gcc cpp g++ make mosquitto-clients python2.7 python-pip python-pcapy python-bson 
+     procps wget gcc cpp g++ make mosquitto-clients python2.7 python-pip python-pcapy python-bson 
     
 # We'll be installing impacket through pip later, so explicitly remove it here
 RUN apt-get -y remove python-impacket

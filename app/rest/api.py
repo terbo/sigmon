@@ -11,4 +11,4 @@ app = Eve()
 #                    format='%(asctime)s %(funcName)s %(threadName)s(%(lineno)d) -%(levelno)s: %(message)s')
  
 if __name__ == '__main__':
-  app.run(host='0.0.0.0',port=8989,debug=False,processes=4,threaded=False)
+  app.run(host='0.0.0.0',port=8989,debug=True,processes=4,threaded=False)

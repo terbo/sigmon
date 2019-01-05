@@ -42,11 +42,11 @@ check_services() {
 
 runwebapp() {
   . ${SIGMON_ROOT}/etc/settings.sh
-  python2.7 -uBR /sigmon/webapp.py &
+  python2.7 -uBR ${SIGMON_ROOT}/webapp.py &
   echo $! > $PY_PIDFILE
   
   if [ -z "${SIGMON_HTTPS}" ]; then
-    python2.7 -uBR /sigmon/webappssl.py &
+    python2.7 -uBR ${SIGMON_ROOT}/webappssl.py &
     echo "echo $! > $PY_PIDFILESSL"
   fi
 }
@@ -107,9 +107,9 @@ check_pids() {
 main_loop() {
   screentitle="sigmon "
   echo -e '\033k'$screentitle'\033\\'
-  (mosquitto_sub -t '#' -v | ccze -A) & 
+  #(mosquitto_sub -t '#' -v | ccze -A) & 
   
-  while check_services; do
+  while true; do
   
     check_pids
     if [ $? = '0' ]; then 
