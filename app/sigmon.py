@@ -63,7 +63,7 @@ SIGMON_DATA = os.environ.get('SIGMON_DATA', '/data/sigmon')
 SIGMON_PCAP = SIGMON_DATA + '/app/static/captures/incoming'
 
 SIGMON_MONGO_URL = os.environ.get('SIGMON_MONGO_URL', 'localhost')
-SIGMON_MQTT_URL = SIGMON_MONGO_URL
+SIGMON_MQTT_URL = os.environ.get('SIGMON_MQTT_URL', SIGMON_MONGO_URL)
 SIGMON_MQTT_PORT = os.environ.get('SIGMON_MQQT_PORT', 1883)
 SIGMON_MQTT_KEEPALIVE = 60
 
