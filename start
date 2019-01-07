@@ -1,5 +1,4 @@
 #!/bin/bash
 cd ${SIGMON_ROOT}
-bash bin/rest.sh &
-bash etc/settings.sh bin/run.sh
-bash bin/workers.sh
+bash bin/workers.sh &
+bash bin/rest.sh

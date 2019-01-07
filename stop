@@ -3,4 +3,4 @@
 killall python2.7
 sleep 2
 killall -9 python2.7
-killall run.sh workers.sh
+killall workers.sh

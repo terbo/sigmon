@@ -30,7 +30,7 @@ services:
     depends_on:
       - sigmon-mongo
       - sigmon-mosquitto
-    command: ./start 
+    command: ./bin/run.sh
     tty: true
     privileged: true
 volumes:
