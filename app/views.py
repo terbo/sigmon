@@ -15,15 +15,6 @@ from os import system
 from app.sigmon import *
 from app import app
 
-#SESSION_TYPE = 'mongodb'
-#SESSION_MONGODB = '1.0.0.1'
-#SESSION_MONGODB_DB = 'sigmon'
-#SESSION_MONGODB_COLLECT = 'access.sessions'
-
-#app.config.from_object(__name__)
-#Session(app)
-
-#app.config.setdefault('BOOTSTRAP_SERVE_LOCAL', True)
 Bootstrap(app)
 #app.extensions['bootstrap']['cdns']['jquery'] = StaticCDN()
 
@@ -36,21 +27,6 @@ class RegexConverter(BaseConverter):
 
 app.url_map.converters['regex'] = RegexConverter
 
-def auth(f):
-  @wraps(f)
-  def checkauth(*args,**kwargs):
-    return f(*args, **kwargs)
-    if session:
-      if session.has_key('authenticated'):
-        #if session['authenticated'] in authenticated_sessions:
-        debug('auth session')
-        return f(*args, **kwargs)
-    else:
-      debug('new session')
-      return redirect(url_for('index',next=request.url))
-  return checkauth
-
-# have a javscript that marks load and updates time_out??
 def loghit(f):
   @wraps(f)
   def log_hit(*args, **kwargs):
@@ -68,10 +44,6 @@ def loghit(f):
     return f(*args, **kwargs)
   return log_hit
 
-@app.route('/d3', methods=['GET'])
-def d3view():
-  return render_template('d3.html', display=['datatable'])
-
 @app.route('/d3g', methods=['GET'])
 def d3gview():
   return render_template('d3g.html', display=['datatable'])
@@ -85,7 +57,6 @@ def login():
       debug(username)
     
       if db.settings.find_one({'name':username,'password':password}):
-        debug('*** woot. ***')
         session['authenticated'] = True
         session['user'] = username
     except:
@@ -107,38 +78,13 @@ def hmmm():
 def index(mins=5,tags=[]):
   url = request.url_rule.rule.replace('/','')
   if url == '': #session and 'authenticated' not in session:
-  #  display = ['splash','gridster']
-  #  data = re.sub('%s/app' % SIGMON_ROOT,'',
-  #              random.choice(glob.glob('%s/app/static/bg/small*' % SIGMON_ROOT)))
     display = ['splash','gridster']
 
     data = re.sub('%s/app' % SIGMON_ROOT,'', random.choice(glob('%s/app/static/img/bg/*' % SIGMON_ROOT)))
     tmpl = 'splash.html'
     
     return render_template(tmpl, display=display,data=data)
-  #else:
-    #data = {'totals': {'ssids': 1}}#overview(mins)
-  #  ua = request.headers.get('User-Agent')
-    
-    #if re.match('(Wget|w3m|lynx|curl)',ua) or request.args.get('txt'):
-    #  tmpl = 'overview.txt'
-    #else:
-    
-  #if url.startswith('overview'):
-  #    req = request.url
-  #    args = unquote_plus((req.split('?'))[1]).split('&')
-  #    args[0] = args[0].split('=')[1]
-  #    args[1] = args[1].split('=')[1]
-  #    
-  #    fromdate  = dateutil.parser.parse(args[0])
-  #    todate   = dateutil.parser.parse(args[1])
-  #    mins = ((todate - fromdate).seconds) / 60
-  #    data = overview(mins,start=fromdate)
-  #    debug('Start: ' + args[0] + ', End: ' + args[1])
-  #else:
   
-  
-  #['/',''] or url.startswith('index') or
   if url.startswith('o') or url.startswith('overview'):
     tmpl = 'overview.html'
   elif url.startswith('bluetooth') or url.startswith('bt'):
@@ -177,12 +123,6 @@ def datapage(mins=5):
   display = ['datatable']
   tmpl = 'data.html'
   
-  #for p in range(0, len(data['probes'])):
-  #  debug(data['probes'][p]['mac']) # = "<a onclick='do_modal(\"mac\",\"%s\")'>%s:%s</a>" % (p['mac'], p['mac'], p['vendor'])
-  #  
-  #  for s in range(0,len(p['ssids'])):
-  #    data['probes'][p]['ssids'][s] = "<a onclick='do_modal(\"%s\")'>%s</a>" % (s, s)
-
   return render_template(tmpl,
                       mins=mins,
                       data=data,
@@ -245,12 +185,6 @@ def ssidlist():
 
     for s in ssids:
     	ssid.append({'key': s['ssid'], 'value': len(s['mac']) })
-    
-    #for i in ssid:
-    #  for t in types:
-    #    for s in types[t]:
-#	  if(re.match(s, i['key']) != None):
-#            i['type'] = t
     
     return jsonify(ssid)
 
@@ -321,7 +255,6 @@ def overviewApi(mins=1,tags=[]):
 @app.route('/api/notices',methods=['GET'])
 @app.route('/api/notices/<concern>',methods=['POST'])
 @loghit
-@auth
 def noticeApi(concern=False):
   if request.method == 'POST':
     notice(concern,markread=True)
@@ -336,17 +269,14 @@ def noticeApi(concern=False):
     else:
       return OK(0)
 
-
 @app.route('/api/totals',methods=['GET'])
 @loghit
-@auth
 def totalsApi():
   totals = totalstats()
   return jsonify({'data':totals})
 
 @app.route('/api/eventgraph',methods=['GET'])
 @loghit
-@auth
 def eventgraphApi():
   graph = eventgraph()
   
@@ -363,7 +293,6 @@ def heatmapApi():
 @app.route('/api/graph/<what>/<when>',methods=['GET'])
 @app.route('/api/graph/<what>/<when>/<howlong>',methods=['GET'])
 @loghit
-#@auth
 def graphApi(what='probes',when=1,howlong=1):
   graph = graphdata(time=dt.now() - timedelta(days=int(when)), hours=int(when)*int(howlong))
  
@@ -399,7 +328,6 @@ def graphApi(what='probes',when=1,howlong=1):
 @app.route('/devs',methods=['GET','POST'])
 @app.route('/devices',methods=['GET','POST'])
 @loghit
-@auth
 def viewdevices():
   data = active_sensors(return_all=True)
 
@@ -411,13 +339,11 @@ def viewdevices():
 
 @app.route('/config',methods=['GET','POST'])
 @loghit
-@auth
 def webconfig():
   pass 
 
 @app.route('/sensorlogs')
 @loghit
-@auth
 def sensorlogs():
   out = list(db.logs.web.find().limit(100).sort([('time',-1)]))
   cols = lsdb(False)
@@ -427,7 +353,6 @@ def sensorlogs():
 
 @app.route('/weblogs')
 @loghit
-@auth
 def weblogs():
   out = list(db.logs.web.find().limit(100).sort([('time',-1)]))
   return render_template('collections.html',
@@ -436,7 +361,6 @@ def weblogs():
 
 @app.route('/joblog')
 @loghit
-@auth
 def joblogs():
   out = list(db.logs.jobs.find().limit(100).sort([('time',-1)]))
 
@@ -458,12 +382,8 @@ def helpApi():
 
 @app.route('/api/sessions/<q>',methods=['GET'])
 @loghit
-@auth
 def sessionsApi(q):
   return jsonify(get_sessions(q))
-
-  #n = sorted(sensors, key=lambda x: sensors[x]['status'].has_key('connected') and sensors[x]['status']['connected'])
-  #for sensor in list(reversed(n)):
 
 # returns list of active sensors or full db
 @app.route('/api/sensors',methods=['GET','POST'])
@@ -479,7 +399,6 @@ def sensorsApi(q='active'):
     
     return jsonify({'data': data})
  
-  #elif q == 'locate' and request.method == 'GET':
   elif q == 'locate' and request.method == 'POST':
     ret = ''
     try:
@@ -495,19 +414,6 @@ def sensorsApi(q='active'):
   elif q == 'edit' and request.method == 'POST':
     info('Editing..')
     s = request.form
-    # need to add .change and .errors, but grepping the update
-    # for .error classes ...
-    # Add a sensor
-    # sensor stats
-    #  total uptime (first probe - gaps - last probe)
-    #  total probes
-    #  average/min/max rssi
-    #  ssids?
-    #  
-    # then .. datatables with search options,
-    # which get sent to the api and executed ...
-    #
-    #for key in s.keys():
     
     try:
       (ip,port) = s['ssh'].split(':')
@@ -555,7 +461,6 @@ def sensorsApi(q='active'):
 @app.route('/vendor/<q>',methods=['GET'])
 @app.route('/api/vendor/<q>',methods=['GET'])
 @loghit
-@auth
 def vendorApi(q):
     res = []
     for vend in db.vendors.find({'name':q},{'_id': False}):
@@ -566,7 +471,6 @@ def vendorApi(q):
 @app.route('/lookup/<q>',methods=['GET'])
 @app.route('/lookup/<typ>/<q>',methods=['GET'])
 @loghit
-@auth
 def lookupapi(q,typ='mac'):
     if re.match(r'(?:[0-9a-fA-F]:?){12}',typ) or typ == 'mac':
         data = lookup(q)
@@ -610,7 +514,6 @@ def lookupapi(q,typ='mac'):
 
 @app.route('/api/lookup/<q>',methods=['GET'])
 @loghit
-@auth
 def apimac(q):
   return jsonify({'data': lookup(q)})
 
@@ -621,7 +524,6 @@ def apimac(q):
 @app.route('/api/whosaw/<mac>',methods=['GET'])
 @app.route('/api/whosaw/<mac>/<since>',methods=['GET'])
 @loghit
-@auth
 def whosawApi(mac,since=1):
   mac = re.sub('_',':',mac)
   ret = whosaw(mac)
@@ -632,7 +534,6 @@ def whosawApi(mac,since=1):
 @app.route('/api/probestats', methods=['GET'])
 @app.route('/api/probestats/<what>', methods=['GET'])
 @loghit
-@auth
 def probestatsApi(what='hourly'):
   if what == 'hourly':
     pph = probes_per_hour()
@@ -651,8 +552,7 @@ def uploadApi():
     content_type = request.headers['Content-Type']
     sensor = request.headers['Sensor']
     #apikey = request.headers['APIKey']
-    postfrom = request.remote_addr
-
+    postfrom = request.remote_addr 
     if content_type == 'multipart/form-data':
       length = request.content_length
       data = request.stream.read();
@@ -661,16 +561,14 @@ def uploadApi():
       if len(data) != length:
         abort(405)
       
-      #debug("Received file '%s' (%s bytes) from %s (%s)" % ( filename, length, postfrom, sensor ))
+      debug("Received file '%s' (%s bytes) from %s (%s)" % ( filename, length, postfrom, sensor ))
       savecap(filename, data)
       return OK(1)
     elif content_type == 'application/json':
       data = request.get_json()
-      #debug("Received JSON (%s elements) from %s (%s)" % ( len(data), postfrom, sensor ))
+      debug("Received JSON (%s elements) from %s (%s)" % ( len(data), postfrom, sensor ))
       addpacket(data)
       return OK(1)
-    # simple standalone reciever - eve or flask listen, submit to mongo, bout it 
-  
   abort(403)
 
 
@@ -680,55 +578,6 @@ def OK(ok=1):
   else:
     return jsonify({'result':False})
 
-@app.route('/cols',methods=['GET','POST'])
-@app.route('/cols/',methods=['GET','POST'])
-@app.route('/cols/<db_lookup>',methods=['GET','POST'])
-@app.route('/cols/<db_lookup>/<rlimit>',methods=['GET','POST'])
-@loghit
-def dbApi(db_lookup='logs.jobs',rlimit=250,since=False):
-  if request.method == 'POST':
-    pass
-  else:
-    #db_lookup = request.args.get('db_lookup')
-    if db_lookup in db.collection_names():
-      size = 0
-      fields=[]
-      
-      rows = dbdump(db_lookup,rlimit)
-  
-      for field in rows[0]:
-        fields.append(field)
-       
-      cols = lsdb(False)
-      for col in cols:
-        size += int(cols[col])
-
-      return render_template('collections.html',
-                              title=db_lookup,
-                              size=size,
-                              col=rows,
-                              cols=cols,
-                              fields=fields,
-                              display=['datatable'])
-
-# tracking logic:
-# phone sends request to be tracked
-#  (every 4 seconds)
-#   POST /api/track
-#   DATA mac, host, gps location
-# * host is translated to mac
-#   you're only tracking own devices
-#
-# Then loads URL /track/mac
-# this page displays Leaflet map,
-# and GETs last seen probes
-# (every 5 secs)
-# Displayed in browser is last signal levels
-# Recorded in db.fingerprints is all above
-
-# print perimap template
-# ask for posters loc
-# send signals and location of sensors
 @app.route('/track/<mac>',methods=['GET'])
 def viewtrack(mac):
   trackres = trackview(mac)
@@ -763,29 +612,5 @@ def stream_template(template_name, **context):
     rv = t.stream(context)
     rv.enable_buffering(5)
     return rv
-
-@app.route('/set/')
-def set():
-    session['key'] = 'value'
-    return OK(1)
-
-@app.route('/get/')
-def get():
-    return session.get('key', 'not set')
-
-@app.route('/leds', methods=['GET'])
-def ledpage():
-  return render_template('leds.html')
-
-@app.route('/api/leds/<int:ledset>', methods=['POST'])
-def setleds(ledset=1):
-  r = request.form['r']
-  g = request.form['g']
-  b = request.form['b']
-  #debug('%s, %s, %s' % ( r, g, b))
-
-  mqtt.publish('/LED/%d' % ledset, '%s,%s,%s' % (r,g,b))
-
-  return OK(1)
 
 # vim: set ts=2 sw=2 ai expandtab softtabstop=2

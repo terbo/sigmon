@@ -1,7 +1,7 @@
 #!/bin/bash
 # v.001
 
-cd /data/sigmon
+#cd /data/sigmon
 
 PYTHON_ARGS='-uBRc'
 SIGCODE='from app.sigmon import *;'

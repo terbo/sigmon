@@ -23,8 +23,6 @@ from pprint import pprint as pp, pformat as pf
 from pygments import highlight
 from pygments.lexers import PythonLexer
 from pygments.formatters import Terminal256Formatter
-def ppc(obj):
-  print highlight(pf(obj), PythonLexer(), Terminal256Formatter())
 
 import pytz, random, coloredlogs, logging, humanize
 import dateutil.parser, bson
@@ -93,12 +91,6 @@ own_ssids = {'Any'}
 def first_setup():
   collections = list(db.collection_names())
 
-  # link time and mac by newest probe first
-  # what about hashing the macs?
-  # remove non-alpha, lowercase
-  # all mac access is through a filter sub
-  # that removes, adds, anonymizes, or prettyfies standard mac
-
   if 'probes' not in collections: db.create_collection('probes')
   db.probes.drop_indexes()
   db.probes.create_index('_created',sparse=True, background=True)
@@ -145,13 +137,6 @@ def first_setup():
   db.devices.drop_indexes()
   db.devices.create_index('tags', sparse=True, background=True)
   db.devices.create_index([('lastseen',pymongo.ASCENDING),('mac',pymongo.TEXT)], sparse=True, background=True)
-  
-  # also, import template databases
-  # make indexes
-  # check versions
-  # check files
-  # etc
-  pass
 
 def totalprobes():
   return db.probes.find().count()
@@ -538,23 +523,8 @@ def overview(mins=OVERVIEW_MINUTES, start='', getaps=True, getbts=False, getsess
       else: 
         pkt.update({'mac': pkt['_id'] })
      
-      #pkt.update({'macpretty': pkt['mac']})
-      #pkt.update({'mac': pkt['mac'].replace(':','_') })
-      
-      #if 'alert' in pkt['tags']:
-      #  if 'wifinet' in pkt['tags']:
-      #    os.system('/data/sigmon/notice.sh')
-      
       probes.append(pkt)
    
-  #dgraph = [ { 'mac':vendmac(x['mac'],x['vendor']),
-  #               'tags':x['tags'],
-  #               'probes':x['probes'],
-  #               'sensors':x['sensors'],
-  #               'lastrssi':x['lastrssi'],
-  #               'sessions':x['sessioncount'],
-  #               'ssids':x['ssids'] } for x in probes ]
-      
   totals = totalstats()
   debug('[overview]   ---   active sensors')
   sensors = active_sensors()
@@ -635,16 +605,6 @@ def whosaw(q, period='', since=5):
 
   return {'now':_now(), 'data': data }
 
-# return the given macs vendor if available
-# sent a mac first searches vendor database for oui, then full text
-#def vendor_oui(mac):
-#  oui = EUI(mac)
-#  try:
-#    vendoroui  = oui.info['OUI']['oui']
-#    vendorname = oui.info['OUI']['org']
-#  except:
-#    return 'Unknown'
-  
 def vendor_oui(mac):
   if not mac:
     return 
@@ -662,9 +622,6 @@ def vendor_oui(mac):
         vendor_long = 'Unknown'
     
     vendor_oui = ''
-    #debug('mac: %s / %s / %s / %s' % ( mac, res[0], res[1], res[2] ))
-    
-    #vendor_oui = '%x' % (macparser._get_mac_int(macparser._strip_mac(mac)) >> res[2])
   except Exception as e:
     print('%s: %s' % ( mac, e ))
     return 'Unknown'
@@ -1643,24 +1600,9 @@ def locatable(mins=1, seenbymin=3, minrssi=-75, mac=False, owned_only=False, ret
     locs = []
     
     for probe in probes[mac]:
-      # for this to be accurate
-      # need to send exactly 3 polygons
-      # from 3 distinct points
-      # duh.
-      
-      #loc = [probe['location']['coordinates'][1], probe['location']['coordinates'][0], probe['rssi']]
       avgrssi = avgrssi + probe['rssi']
-      #poly = locToCircle(probe['location']['coordinates'][1],
-      #                 probe['location']['coordinates'][0],
-      #                 probe['rssi'])
-      #loc = multilat(poly, probe['rssi'])
-      #polys.append([[x[1],x[0]] for x in poly])
       locs.append([probe['location']['coordinates'][1], probe['location']['coordinates'][0], probe['rssi']])
-      #locs.append([loc['centroid'].y, loc['centroid'].x, probe['rssi']])
-      #rssis.append(probe['rssi'])
-      #add loc, rssi, then multilat that?
    
-    #avgrssi = avgrssi / len(probes[mac])
     location = multilat(locs)
     centroid = location['centroid']
     del location['centroid']
@@ -1715,8 +1657,6 @@ def multilat(poly):
     'multiplier': multiplier,
     'derivedFrom': derivedFrom
   }   
-
-  #return sPoly(intersection).centroid
   
 def locToCircle(lng,lat,rssi):
   origin = [lng,lat]
@@ -1729,10 +1669,7 @@ def locToCircle(lng,lat,rssi):
   coords = []
   _coords = []
 
-  #print origin
   for bearing in range(0,360):
-    #print 'Bearing: %i' % bearing
-    #print origin, bearing
     _coords.append(vincenty(kilometers=distance/1000).destination(origin,bearing))
 
   # turn LL into array rather than geopy points
@@ -1761,7 +1698,7 @@ def readcaps():
       debug('READ PCAPs: %s' % e)
       pass
 
-# take a packet and add it to then probes collections
+# take a packet and add it to the probes collections
 def readpcap(pcap_file):
   #bulk_probes = db.probes.initialize_unordered_bulk_op()
 
@@ -1795,20 +1732,6 @@ def readpcap(pcap_file):
     debug('READ_PCAP: %s' % e)
     return
   
-  # need to either mergecap into reasonably sized pcaps or
-  # archive in some other way
-  #if unsynced > 5:
-  #  try:
-  #    debug('Syncing PCAP probes')
-  #    bulk_probes.execute()
-  #  except BulkWriteError as bwe:
-  #    debug('readcap(): bulk_probes: %s' % bwe.details)
-  #  finally:
-  #    unsynced = 0
-
-  #unsynced = unsynced + 1
-
-
 def pcap_pktcb(sensor, hdr, pkt):
   try:
     radio_packet = RTD.decode(pkt)
@@ -1863,10 +1786,6 @@ def getBssid(arr):
     pass
   return st
 
-def nl():
-  logging.getLogger().setLevel('INFO')
-  
-
 # respond to various messages
 def mqtt_message(client, userdata, msg):
   info('MQTT')
@@ -1888,7 +1807,7 @@ def check_wireshark():
     notice('oui-database','updating wireshark OUI database, last updated %s' % deltafy(last_updated))
     #macparser.update()
 
-mongo = M(host=SIGMON_MONGO_URL, tz_aware=True, connect=True)
+mongo = M(host=SIGMON_MONGO_URL, tz_aware=True, connect=False)
 db   = mongo.sigmon
 col  = db.probes
 hostname = platform.node()
@@ -1898,20 +1817,13 @@ macparser = manuf.MacParser()
 bulk_probes = bulk_daily = bulk_hourly = False
 unsynced = 0
 
-mqtt = mqttclient.Client()
-mqtt.connect(SIGMON_MQTT_URL, SIGMON_MQTT_PORT, SIGMON_MQTT_KEEPALIVE)
-
-mqtt.on_connect = mqtt_connected
-mqtt.on_message = mqtt_message
-
-check_wireshark()
 
 info('Sigmon %s Loaded' % __name__)
 
 if __name__ == '__main__':
-  nl()
+  check_wireshark()
+  #mqtt.publish('/sigmon/system','Sigmon %s Loaded' % __name__)
 elif __name__ == 'app.sigmon':
-  mqtt.publish('/sigmon/system','Sigmon %s Loaded' % __name__)
   pass
 
 # vim: ts=2 sw=2 ai expandtab softtabstop=2

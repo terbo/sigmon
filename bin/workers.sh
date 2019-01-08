@@ -10,10 +10,9 @@ cd $SIGMON_ROOT
 
 PYTHON_ARGS='-uBRc'
 SIGCODE='from app.sigmon import *;'
-PPRINT='print(pp(%%()))'
 
-CODE='run_workers()'
-
+#PPRINT='print(pp(%%()))'
+#CODE='run_workers()'
 #stitle "[${0##*/}]"
 
 ( while true; do python2.7 $PYTHON_ARGS "$SIGCODE run_worker('device')"; done ) &

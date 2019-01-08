@@ -15,11 +15,11 @@ kill -9 `cat listen.pid`
 
 rm -f listen.pid
 
-logread -f &
+#logread -f &
 
 ./chop ${SIGMON_MON_DEV}
 
-tail -f /var/log/* /var/log/*/* /data/sigmon/logs/*g &
+#tail -f /var/log/* /var/log/*/* /data/sigmon/logs/*g &
 
 ./listen.py &
 

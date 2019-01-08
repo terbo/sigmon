@@ -105,9 +105,9 @@ check_pids() {
 }
 
 main_loop() {
-  screentitle="sigmon "
-  echo -e '\033k'$screentitle'\033\\'
-  (mosquitto_sub -t '#' -v | ccze -A) & 
+  #screentitle="sigmon "
+  #echo -e '\033k'$screentitle'\033\\'
+  #(mosquitto_sub -t '#' -v | ccze -A) & 
   
   while check_services; do
   
@@ -116,8 +116,6 @@ main_loop() {
       echo "Check if $0 is running, and remove stale pid files. - $PY_PIDFILE $RUN_PIDFILE"
       exit 1
     fi
-    
-    bin/rmpyc
     
     echo $$ > $RUN_PIDFILE
     trap stopwebapp EXIT
@@ -131,11 +129,11 @@ main_loop() {
       if [ "$(( $(timeu) - $LAST_CHECKED ))" -gt "$(( $CHECK_TIME * 60 ))" ]; then
         echo Stats for $(timedt)
         printf "   ["; for i in {1..$(( $COLS - 3))}; do printf '_'; done; echo ']'
-        bin/cmd.sh probes_per_hour | ccze -A &
+        bin/cmd.sh probes_per_hour # | ccze -A &
         bin/cmd.sh active_sensors  2>&1 > /dev/null 
         #wget -q --output-document=- http://1.0.0.1/api/overview &
         #printf "   ["; for i in {1..32}; do printf '_'; done; echo ']'
-        wget -q --output-document=/dev/null http://1.0.0.1:8080/api/sensors/active | ccze -A &
+        wget -q --output-document=/dev/null http://1.0.0.1:8080/api/sensors/active # | ccze -A &
         LAST_CHECKED=$(timeu)
       #elif [ "$(( $(timeu) - $LAST_CHECKED ))" -gt "$(( $WORKER_TIME * 60 ))" ]; then
       #  echo "Launching workers"

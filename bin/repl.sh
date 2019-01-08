@@ -1,4 +1,4 @@
 #!/bin/sh
 #stitle "sigmon[${0##*/}]"
 
-ptpython -i /data/sigmon/app/sigmon.py
+python -i /data/sigmon/app/sigmon.py
