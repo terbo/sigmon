@@ -5,7 +5,7 @@ use List::Util 'shuffle';
 
 my ($maxchan, $sleeptime, @chans, $iface) = (11,1);
 
-$iface = $1 || 'mon0';
+$iface = $ARGV[0] || 'mon0';
 
 do {
   print("Hopping on $iface channels 1-$maxchan  dwelling ${sleeptime}s. ");
