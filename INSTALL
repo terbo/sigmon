@@ -1,29 +1,39 @@
-I'm going to install the suite into a virtual machine while i migrate my windows sigmon VM to a dedicated linux machine ... haven't been gaming much.
+INSTALL
 
-Ok, so first thing is install a few linux servers and utilities:
+Use docker-compose to run a container.
+Optionally, edit the docker-compose.yml and specify any specific addresses/ports(*TODO)
 
-# apt-get install libpcap-dev iw  wireless-tools mongodb ntpdate python-bson ptpython
+docker-compose up
 
-Additionally, these are useful, some required:
 
-apt-get macchanger screen htop discus wget gcc cpp g++ make 
+Manual Install (for pre-alpha):
 
-Then, python modules, from the requirements file, which is in the etc/ directory:
 
-# pip install $(cat requirements.txt)
+Server (debian):
+apt-get install mongodb ntpdate python-bson 
+pip install -r etc/requirements.txt
 
-After this, you must move "/usr/local/lib/python2.7/dist-packages/dist-packages/manuf.py" to "/usr/lib/python2.7" and also edit manuf.py (line xxx)
-on that directory AND also edit sigmon.py (line 1554) to point to /data/sigmon/etc/manuf. I'll try and fix that, but manuf is broken right now.
+bin/cmd.sh first_setup
+./start
 
-So pretty much set, now we should be able to do:
+Javascript requirements (distributed with compatible version):
 
-# bin/cmd.sh first_setup
+bootstrap
+datatables
+gridster
+lodash
+boostrap/modal
+d3
 
-then, just do a ./run and open a web browser to localhost:443 and enjoy :)
+Client (debian):
+apt-get install wget iw wireless-tools ntpdate
+pip install -r client/requirements.txt
+cd client
+./listen
 
-(I think. I have to upgrade to debian unstable to get the correct mongodb...)
 
-Yea, thats it, and then you've gotta change a ton of hard coded URL's.....
-
+Now open a web browser to localhost:8080 and enjoy!
 
 -- NOTE - THIS IS SUPER ALPHA SOFTWARE -- RUN IT AT YOUR OWN RISK -- YOU will NOTICE SOMETHING STRANGE ABOUT YOUR CAT AFTER INSTALLING
+
+
