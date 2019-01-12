@@ -1,12 +1,13 @@
 INSTALL
 
+Docker Install (for matthew-feature-docker-integration branch)
 Use docker-compose to run a container.
 Optionally, edit the docker-compose.yml and specify any specific addresses/ports(*TODO)
 
 docker-compose up
 
 
-Manual Install (for pre-alpha):
+*Manual Install* (for pre-alpha branch):
 
 
 Server (debian):
