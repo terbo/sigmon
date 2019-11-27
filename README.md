@@ -1,6 +1,8 @@
 # Sigmon [![Chat]()]()
 ***PRELIMINARY PRE-ALPHA/NON-WORKING CODE***
 
+[Nov '19] This project has been resurrected @ <http://github.com/terbo/node-signal-monitor> - NodeJS, cross-platform potential, and most of all, better performance!
+
 ## What is Sigmon?
 
 "There will always be radios. There will only be more radios" - The Sigmon Creed
